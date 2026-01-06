@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 图标层 - 居中显示，确保完整显示 -->
+    <item
+        android:drawable="@drawable/ic_launcher_foreground"
+        android:width="120dp"
+        android:height="120dp"
+        android:gravity="center_horizontal|center_vertical"
+        android:bottom="30dp" />
+
+    <!-- Slogan文字层 - 图标下方居中显示，尺寸更小确保完整显示 -->
+    <item
+        android:drawable="@drawable/slogan"
+        android:gravity="center_horizontal|center_vertical"
+        android:top="80dp" />
+
+</layer-list>
+
