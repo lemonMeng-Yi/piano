@@ -3,39 +3,24 @@ package com.example.piano
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
+import com.example.piano.navigation.AuthNavHost
+import com.example.piano.navigation.MainNavHost
 import com.example.piano.ui.theme.PianoTheme
-import com.example.pianotutor.ui.screens.HomePage
-import com.example.pianotutor.ui.screens.PracticePage
-import com.example.pianotutor.ui.screens.ProfilePage
-import com.example.pianotutor.ui.screens.ProgressPage
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 安装Splash Screen
+        // 安装Splash NavRoutes
         installSplashScreen()
         
         super.onCreate(savedInstanceState)
@@ -54,47 +39,26 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PianoTutorApp() {
-    var selectedTab by remember { mutableStateOf(0) }
-
-    Scaffold(
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface
-            ) {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "首页") },
-                    label = { Text("首页") },
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.MusicNote, contentDescription = "练习") },
-                    label = { Text("练习") },
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.BarChart, contentDescription = "进度") },
-                    label = { Text("进度") },
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Person, contentDescription = "我的") },
-                    label = { Text("我的") },
-                    selected = selectedTab == 3,
-                    onClick = { selectedTab = 3 }
-                )
+    val navController = rememberNavController()
+    var isLoggedIn by remember { mutableStateOf(false) }
+    
+    if (!isLoggedIn) {
+        // 认证导航：管理登录和注册页面
+        AuthNavHost(
+            navController = navController,
+            onLoginSuccess = {
+                // TODO: 这里后续添加登录请求
+                // 暂时直接登录成功
+                isLoggedIn = true
+            },
+            onRegisterSuccess = {
+                // TODO: 这里后续添加注册请求
+                // 暂时直接注册成功并登录
+                isLoggedIn = true
             }
-        }
-    ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            when (selectedTab) {
-                0 -> HomePage()
-                1 -> PracticePage()
-                2 -> ProgressPage()
-                3 -> ProfilePage()
-            }
-        }
+        )
+    } else {
+        // 主功能导航：管理应用核心功能页面
+        MainNavHost(navController = navController)
     }
 }

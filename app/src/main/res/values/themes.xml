@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.Piano" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Piano" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- 窗口背景 -->
+        <item name="android:windowBackground">@color/status_window_background</item>
+        
+        <!-- 显式指定状态栏颜色为白色 -->
+        <item name="android:statusBarColor">@color/status_bar_background</item>
+        
+        <!-- 亮色背景需要深色图标 -->
+        <item name="android:windowLightStatusBar">true</item>
+        
+        <!-- 如遇到被系统强制加深，关掉对比度强制（API 29+）-->
+        <item name="android:enforceStatusBarContrast" tools:ignore="NewApi">false</item>
+    </style>
     
     <!-- Splash Screen主题 -->
     <style name="Theme.Piano.Splash" parent="Theme.SplashScreen">

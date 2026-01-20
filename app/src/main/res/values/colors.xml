@@ -7,4 +7,9 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- 状态栏相关颜色 -->
+    <color name="status_bar_background">#FFFFFFFF</color>
+    <color name="status_window_background">#FFFFFFFF</color>
+    <color name="fui_transparent">#00000000</color>
 </resources>
