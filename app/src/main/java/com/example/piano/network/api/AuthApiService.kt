@@ -31,5 +31,5 @@ interface AuthApiService {
      * @return 注册响应（成功状态）
      */
     @POST("users/auth/register")
-    suspend fun register(@Body request: RegisterRequest): Response<BaseResult<Unit>>
+    suspend fun register(@Body request: RegisterRequest): Response<BaseResult<String>>
 }

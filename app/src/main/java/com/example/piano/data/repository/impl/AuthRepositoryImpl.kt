@@ -23,7 +23,9 @@ class AuthRepositoryImpl : AuthRepository {
         username: String,
         password: String,
         confirmPassword: String
-    ): ResponseState<Unit> {
-        return authApiService.register(RegisterRequest(username, password, confirmPassword)).toState()
+    ): ResponseState<String> {
+        // 注意：confirmPassword 仅用于前端验证，不发送到后端
+        // 后端接口只需要 username 和 password
+        return authApiService.register(RegisterRequest(username, password)).toState()
     }
 }

@@ -51,7 +51,7 @@ class AuthViewModel(
      * 
      * @param username 用户名
      * @param password 密码
-     * @param confirmPassword 确认密码
+     * @param confirmPassword 确认密码（仅用于前端验证，不发送到后端）
      * @param onResult 结果回调 (success: Boolean, errorMessage: String?)
      */
     fun register(
@@ -60,6 +60,23 @@ class AuthViewModel(
         confirmPassword: String,
         onResult: (Boolean, String?) -> Unit
     ) {
+        // 前端验证：检查密码是否一致
+        if (password != confirmPassword) {
+            onResult(false, "两次输入的密码不一致")
+            return
+        }
+        
+        // 验证用户名和密码不能为空
+        if (username.isBlank()) {
+            onResult(false, "用户名不能为空")
+            return
+        }
+        
+        if (password.isBlank()) {
+            onResult(false, "密码不能为空")
+            return
+        }
+        
         viewModelScope.launch {
             when (val result = authRepository.register(username, password, confirmPassword)) {
                 is ResponseState.Success -> {

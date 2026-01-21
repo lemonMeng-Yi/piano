@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.example.piano.navigation.AuthNavHost
 import com.example.piano.navigation.MainNavHost
+import com.example.piano.network.util.TokenManager
 import com.example.piano.ui.theme.PianoTheme
 
 class MainActivity : ComponentActivity() {
@@ -40,7 +41,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun PianoTutorApp() {
     val navController = rememberNavController()
-    var isLoggedIn by remember { mutableStateOf(false) }
+    // 从 TokenManager 读取已保存的 token 来判断初始登录状态
+    var isLoggedIn by remember { mutableStateOf(TokenManager.isLoggedIn()) }
     
     if (!isLoggedIn) {
         // 认证导航：管理登录和注册页面

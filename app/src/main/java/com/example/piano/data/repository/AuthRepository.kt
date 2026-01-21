@@ -21,6 +21,6 @@ interface AuthRepository {
         username: String,
         password: String,
         confirmPassword: String
-    ): ResponseState<Unit>
+    ): ResponseState<String>
     
 }

@@ -10,9 +10,9 @@ data class LoginRequest(
 
 /**
  * 注册请求
+ * 根据接口文档，只需要 username 和 password
  */
 data class RegisterRequest(
     val username: String,
-    val password: String,
-    val confirmPassword: String
+    val password: String
 )

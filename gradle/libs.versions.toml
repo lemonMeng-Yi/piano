@@ -13,6 +13,7 @@ splashscreen = "1.0.1"
 retrofit = "2.9.0"
 okhttp = "4.12.0"
 gson = "2.10.1"
+utilcodex = "1.31.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -36,6 +37,7 @@ retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", ver
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+utilcodex = { group = "com.blankj", name = "utilcodex", version.ref = "utilcodex" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
