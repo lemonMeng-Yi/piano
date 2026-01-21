@@ -37,7 +37,7 @@ fun <T : Any> Response<BaseResult<T>>.toState(): ResponseState<T> {
         val baseResult = this.body()
         if (baseResult == null) {
             ResponseState.UnknownError(Exception("响应体为空"))
-        } else if (baseResult.code == 0) {
+        } else if (baseResult.isSuccess()) {
             val data = baseResult.data
             if (data == null) {
                 ResponseState.UnknownError(Exception("数据为空"))

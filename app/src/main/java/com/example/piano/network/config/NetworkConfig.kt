@@ -6,9 +6,8 @@ package com.example.piano.network.config
 object NetworkConfig {
     /**
      * API 基础 URL
-     * TODO: 替换为实际的服务器地址
      */
-    const val BASE_URL = "https://api.example.com/"
+    const val BASE_URL = "http://localhost:8080/"
     
     /**
      * 连接超时时间（秒）

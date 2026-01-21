@@ -1,9 +1,13 @@
 package com.example.piano.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.piano.data.repository.impl.AuthRepositoryImpl
+import com.example.piano.ui.viewmodel.AuthViewModel
 import com.example.pianotutor.ui.screens.LoginPage
 import com.example.pianotutor.ui.screens.RegisterPage
 
@@ -33,6 +37,10 @@ fun AuthNavHost(
     onRegisterSuccess: () -> Unit
 ) {
     val navigationActions = NavigationActions(navController)
+    val authRepository = remember { AuthRepositoryImpl() }
+    val authViewModel: AuthViewModel = viewModel { 
+        AuthViewModel(authRepository)
+    }
     
     NavHost(
         navController = navController,
@@ -42,9 +50,14 @@ fun AuthNavHost(
             LoginPage(
                 navigationActions = navigationActions,
                 onLoginClick = { username, password ->
-                    // TODO: 这里后续添加登录请求
-                    // 暂时直接登录成功
-                    onLoginSuccess()
+                    authViewModel.login(username, password) { success, errorMessage ->
+                        if (success) {
+                            onLoginSuccess()
+                        } else {
+                            // TODO: 显示错误提示
+                            // errorMessage 包含错误信息
+                        }
+                    }
                 }
             )
         }
@@ -53,9 +66,14 @@ fun AuthNavHost(
             RegisterPage(
                 navigationActions = navigationActions,
                 onRegisterClick = { username, password, confirmPassword ->
-                    // TODO: 这里后续添加注册请求
-                    // 暂时直接注册成功并登录
-                    onRegisterSuccess()
+                    authViewModel.register(username, password, confirmPassword) { success, errorMessage ->
+                        if (success) {
+                            onRegisterSuccess()
+                        } else {
+                            // TODO: 显示错误提示
+                            // errorMessage 包含错误信息
+                        }
+                    }
                 }
             )
         }

@@ -1,6 +1,6 @@
 package com.example.piano.network
 
-import com.example.piano.network.api.AuthApi
+import com.example.piano.network.api.AuthApiService
 import com.example.piano.network.config.NetworkConfig
 import com.example.piano.network.interceptor.AuthInterceptor
 import com.google.gson.Gson
@@ -53,5 +53,12 @@ object NetworkClient {
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
+    }
+    
+    /**
+     * 认证 API 服务
+     */
+    val authApiService: AuthApiService by lazy {
+        retrofit.create(AuthApiService::class.java)
     }
 }
