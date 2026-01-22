@@ -34,6 +34,13 @@ class NavigationActions(private val navController: NavController) {
         navController.navigateUp()
     }
     
+    /**
+     * 导航到忘记密码页面
+     */
+    fun navigateToForgotPassword() {
+        navController.navigate(NavRoutes.FORGOT_PASSWORD)
+    }
+    
     // ========== 主功能导航 ==========
     
     /**

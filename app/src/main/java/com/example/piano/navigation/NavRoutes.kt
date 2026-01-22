@@ -11,6 +11,7 @@ object NavRoutes {
     // ========== 认证路由 ==========
     const val LOGIN = "login"
     const val REGISTER = "register"
+    const val FORGOT_PASSWORD = "forgot_password"
     
     // ========== 主功能路由 ==========
     const val HOME = "home"

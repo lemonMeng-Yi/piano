@@ -6,10 +6,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.piano.data.repository.impl.AuthRepositoryImpl
-import com.example.piano.ui.viewmodel.AuthViewModel
-import com.example.pianotutor.ui.screens.LoginPage
-import com.example.pianotutor.ui.screens.RegisterPage
+import com.example.piano.domain.auth.repository.impl.AuthRepositoryImpl
+import com.example.piano.ui.auth.screens.ForgotPasswordPage
+import com.example.piano.ui.auth.screens.LoginPage
+import com.example.piano.ui.auth.screens.RegisterPage
+import com.example.piano.ui.auth.viewmodel.AuthViewModel
 
 /**
  * 认证导航 (AuthNavHost)
@@ -28,13 +29,11 @@ import com.example.pianotutor.ui.screens.RegisterPage
  *
  * @param navController 导航控制器，用于管理页面跳转
  * @param onLoginSuccess 登录成功回调
- * @param onRegisterSuccess 注册成功回调
  */
 @Composable
 fun AuthNavHost(
     navController: NavHostController,
-    onLoginSuccess: () -> Unit,
-    onRegisterSuccess: () -> Unit
+    onLoginSuccess: () -> Unit
 ) {
     val navigationActions = NavigationActions(navController)
     val authRepository = remember { AuthRepositoryImpl() }
@@ -68,7 +67,25 @@ fun AuthNavHost(
                 onRegisterClick = { username, password, confirmPassword ->
                     authViewModel.register(username, password, confirmPassword) { success, errorMessage ->
                         if (success) {
-                            onRegisterSuccess()
+                            // 注册成功后直接跳转到登录页面
+                            navigationActions.navigateToLogin()
+                        } else {
+                            // TODO: 显示错误提示
+                            // errorMessage 包含错误信息
+                        }
+                    }
+                }
+            )
+        }
+        
+        composable(NavRoutes.FORGOT_PASSWORD) {
+            ForgotPasswordPage(
+                navigationActions = navigationActions,
+                onForgotPasswordClick = { username, password, confirmPassword ->
+                    authViewModel.forgotPassword(username, password, confirmPassword) { success, errorMessage ->
+                        if (success) {
+                            // 重置密码成功后跳转到登录页面
+                            navigationActions.navigateToLogin()
                         } else {
                             // TODO: 显示错误提示
                             // errorMessage 包含错误信息

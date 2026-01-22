@@ -1,4 +1,4 @@
-package com.example.piano.network.model
+package com.example.piano.core.network.model
 
 import com.google.gson.annotations.SerializedName
 

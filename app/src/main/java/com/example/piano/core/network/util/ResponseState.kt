@@ -1,6 +1,6 @@
-package com.example.piano.network.util
+package com.example.piano.core.network.util
 
-import com.example.piano.network.model.BaseResult
+import com.example.piano.core.network.model.BaseResult
 import retrofit2.Response
 
 /**

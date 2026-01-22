@@ -1,4 +1,4 @@
-package com.example.pianotutor.ui.screens
+package com.example.piano.ui.auth.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

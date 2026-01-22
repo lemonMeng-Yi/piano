@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.example.piano.navigation.AuthNavHost
 import com.example.piano.navigation.MainNavHost
-import com.example.piano.network.util.TokenManager
+import com.example.piano.core.network.util.TokenManager
 import com.example.piano.ui.theme.PianoTheme
 
 class MainActivity : ComponentActivity() {
@@ -49,13 +49,7 @@ fun PianoTutorApp() {
         AuthNavHost(
             navController = navController,
             onLoginSuccess = {
-                // TODO: 这里后续添加登录请求
-                // 暂时直接登录成功
-                isLoggedIn = true
-            },
-            onRegisterSuccess = {
-                // TODO: 这里后续添加注册请求
-                // 暂时直接注册成功并登录
+                // 登录成功，更新登录状态
                 isLoggedIn = true
             }
         )

@@ -1,4 +1,4 @@
-package com.example.piano.network.util
+package com.example.piano.core.network.util
 
 import com.blankj.utilcode.util.SPUtils
 
@@ -14,11 +14,11 @@ object TokenManager {
     
     /**
      * 初始化 TokenManager
-     * 在 Application.onCreate() 中调用，确保 Utils.init() 已执行
+     * 注意：当前此方法为空，无需调用
+     * 如果将来需要在 TokenManager 中添加初始化逻辑（如读取配置、设置默认值等），可以在这里实现
      */
     fun init() {
-        // SPUtils 已通过 Utils.init() 初始化，无需额外操作
-        // 这里可以添加其他初始化逻辑
+        // 当前无需初始化操作
     }
     
     /**

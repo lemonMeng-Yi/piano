@@ -1,9 +1,7 @@
-package com.example.piano.data.repository
+package com.example.piano.domain.auth.repository
 
-import com.example.piano.network.api.request.LoginRequest
-import com.example.piano.network.api.request.RegisterRequest
-import com.example.piano.network.api.response.LoginResponse
-import com.example.piano.network.util.ResponseState
+import com.example.piano.core.network.util.ResponseState
+import com.example.piano.domain.auth.api.response.LoginResponse
 
 /**
  * 认证 Repository 接口
@@ -21,6 +19,14 @@ interface AuthRepository {
         username: String,
         password: String,
         confirmPassword: String
+    ): ResponseState<String>
+    
+    /**
+     * 忘记密码
+     */
+    suspend fun forgotPassword(
+        username: String,
+        password: String
     ): ResponseState<String>
     
 }

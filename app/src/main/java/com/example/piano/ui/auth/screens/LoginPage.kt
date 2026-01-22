@@ -1,4 +1,4 @@
-package com.example.pianotutor.ui.screens
+package com.example.piano.ui.auth.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -61,7 +61,7 @@ fun LoginPage(
             Text(
                 text = "错音下线！",
                 fontSize = 20.sp,
-                color = PianoBlue40,
+                color = PianoBlueGrey40,
                 textAlign = TextAlign.Center
             )
             
@@ -165,7 +165,7 @@ fun LoginPage(
             ) {
                 // 忘记密码链接
                 TextButton(
-                    onClick = { /* TODO: 忘记密码 */ }
+                    onClick = { navigationActions.navigateToForgotPassword() }
                 ) {
                     Text(
                         text = "忘记密码？",

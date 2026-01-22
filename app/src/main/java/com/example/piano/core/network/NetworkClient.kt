@@ -1,8 +1,7 @@
-package com.example.piano.network
+package com.example.piano.core.network
 
-import com.example.piano.network.api.AuthApiService
-import com.example.piano.network.config.NetworkConfig
-import com.example.piano.network.interceptor.AuthInterceptor
+import com.example.piano.core.network.config.NetworkConfig
+import com.example.piano.core.network.interceptor.AuthInterceptor
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
@@ -56,9 +55,12 @@ object NetworkClient {
     }
     
     /**
-     * 认证 API 服务
+     * 创建 API 服务
+     * 
+     * @param serviceClass API 服务接口类型
+     * @return API 服务实例
      */
-    val authApiService: AuthApiService by lazy {
-        retrofit.create(AuthApiService::class.java)
+    fun <S> createService(serviceClass: Class<S>): S {
+        return retrofit.create(serviceClass)
     }
 }

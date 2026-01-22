@@ -1,4 +1,4 @@
-package com.example.piano.network.api
+package com.example.piano.domain.auth.api
 
 /**
  * API 路径常量
@@ -13,5 +13,8 @@ object ApiPaths {
     
     /** 用户注册 */
     const val REGISTER = "users/auth/register"
+    
+    /** 忘记密码 */
+    const val FORGOT_PASSWORD = "users/auth/forgot-password"
 
 }
