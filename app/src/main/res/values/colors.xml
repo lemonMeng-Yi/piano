@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- 基础颜色 -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -12,4 +13,332 @@
     <color name="status_bar_background">#FFFFFFFF</color>
     <color name="status_window_background">#FFFFFFFF</color>
     <color name="fui_transparent">#00000000</color>
+    
+    <!-- 启动页背景 -->
+    <color name="splash_background">#1A2E63</color>
+    
+    <!-- 橙色系 -->
+    <color name="color_orange_10">#ffffeee8</color>
+    <color name="color_orange_20">#ffffd6c8</color>
+    <color name="color_orange_30">#fffeb59c</color>
+    <color name="color_orange_40">#fffe936e</color>
+    <color name="color_orange_50">#fffd7242</color>
+    <color name="color_orange_60">#fffd5319</color>
+    <color name="color_orange_70">#ffd74715</color>
+    <color name="color_orange_80">#ffb43b12</color>
+    <color name="color_orange_90">#ff902f0e</color>
+    <color name="color_orange_100">#ff72250b</color>
+    
+    <!-- 绿色系 -->
+    <color name="color_green_10">#ffebf7ed</color>
+    <color name="color_green_20">#ffd0edd3</color>
+    <color name="color_green_30">#ffabdeaf</color>
+    <color name="color_green_40">#ff84cf8a</color>
+    <color name="color_green_50">#ff5ec167</color>
+    <color name="color_green_60">#ff3bb346</color>
+    <color name="color_green_70">#ff32983c</color>
+    <color name="color_green_80">#ff2a7f32</color>
+    <color name="color_green_90">#ff226628</color>
+    <color name="color_green_100">#ff1b511f</color>
+    
+    <!-- 黑色系 -->
+    <color name="color_black_10">#1a000000</color>
+    <color name="color_black_20">#33000000</color>
+    <color name="color_black_30">#4d000000</color>
+    <color name="color_black_40">#66000000</color>
+    <color name="color_black_60">#99000000</color>
+    <color name="color_black_80">#cc000000</color>
+    <color name="color_black_100">#ff000000</color>
+    
+    <!-- 白色系 -->
+    <color name="color_white_10">#1affffff</color>
+    <color name="color_white_20">#33ffffff</color>
+    <color name="color_white_40">#66ffffff</color>
+    <color name="color_white_60">#99ffffff</color>
+    <color name="color_white_80">#ccffffff</color>
+    <color name="color_white_100">#ffffffff</color>
+    
+    <!-- 黄色系 -->
+    <color name="color_yellow_10">#fffffae6</color>
+    <color name="color_yellow_20">#fffef2c2</color>
+    <color name="color_yellow_30">#fffde791</color>
+    <color name="color_yellow_40">#fffcdc5e</color>
+    <color name="color_yellow_50">#fffbd22e</color>
+    <color name="color_yellow_60">#fffac800</color>
+    <color name="color_yellow_70">#ffd5aa00</color>
+    <color name="color_yellow_80">#ffb28e00</color>
+    <color name="color_yellow_90">#ff8f7200</color>
+    <color name="color_yellow_100">#ff705a00</color>
+    
+    <!-- 红色系 -->
+    <color name="color_red_10">#fffce7e7</color>
+    <color name="color_red_20">#fff9c4c4</color>
+    <color name="color_red_30">#fff49696</color>
+    <color name="color_red_40">#ffef6565</color>
+    <color name="color_red_50">#ffea3737</color>
+    <color name="color_red_60">#ffe50b0b</color>
+    <color name="color_red_70">#ffc30909</color>
+    <color name="color_red_80">#ffa30808</color>
+    <color name="color_red_90">#ff830606</color>
+    <color name="color_red_100">#ff670505</color>
+    
+    <!-- 蓝色系 -->
+    <color name="color_blue_10">#ffe8eaef</color>
+    <color name="color_blue_20">#ffc8cdda</color>
+    <color name="color_blue_30">#ff9da5bc</color>
+    <color name="color_blue_40">#ff6f7b9d</color>
+    <color name="color_blue_50">#ff43547f</color>
+    <color name="color_blue_60">#ff1a2e63</color>
+    <color name="color_blue_70">#ff162754</color>
+    <color name="color_blue_80">#ff122146</color>
+    <color name="color_blue_90">#ff0f1a38</color>
+    <color name="color_blue_100">#ff0c152d</color>
+    
+    <!-- 灰色系 -->
+    <color name="color_grey_10">#fff5f6f8</color>
+    <color name="color_grey_20">#ffeeeeee</color>
+    <color name="color_grey_30">#ffe9e9e9</color>
+    <color name="color_grey_40">#ffdfe2e9</color>
+    <color name="color_grey_60">#ffa2a2a2</color>
+    <color name="color_grey_80">#ff3c3c3c</color>
+    <color name="color_grey_90">#ff1b1c1f</color>
+    <color name="color_grey_100">#ff0f0f0f</color>
+    
+    <!-- 涨跌颜色 -->
+    <color name="color_rise_0">#0008a088</color>
+    <color name="color_rise_10">#1a08a088</color>
+    <color name="color_rise_20">#3308a088</color>
+    <color name="color_rise_30">#4d08a088</color>
+    <color name="color_rise_40">#6608a088</color>
+    <color name="color_rise_50">#8008a088</color>
+    <color name="color_rise_60">#9908a088</color>
+    <color name="color_rise_70">#b308a088</color>
+    <color name="color_rise_80">#cc08a088</color>
+    <color name="color_rise_90">#e608a088</color>
+    <color name="color_rise_100">#ff08a088</color>
+    
+    <color name="color_fall_0">#00da3445</color>
+    <color name="color_fall_10">#1ada3445</color>
+    <color name="color_fall_20">#33da3445</color>
+    <color name="color_fall_30">#4dda3445</color>
+    <color name="color_fall_40">#66da3445</color>
+    <color name="color_fall_50">#80da3445</color>
+    <color name="color_fall_60">#99da3445</color>
+    <color name="color_fall_70">#b3da3445</color>
+    <color name="color_fall_80">#ccda3445</color>
+    <color name="color_fall_90">#e6da3445</color>
+    <color name="color_fall_100">#ffda3445</color>
+    
+    <!-- 紫色系 -->
+    <color name="color_violet_10">#fff2ecfc</color>
+    <color name="color_violet_20">#ffdfd1f9</color>
+    <color name="color_violet_30">#ffc5acf4</color>
+    <color name="color_violet_40">#ffaa85ef</color>
+    <color name="color_violet_50">#ff9061ea</color>
+    <color name="color_violet_60">#ff783ee5</color>
+    <color name="color_violet_70">#ff6635c3</color>
+    <color name="color_violet_80">#ff552ca3</color>
+    <color name="color_violet_90">#ff442383</color>
+    <color name="color_violet_100">#ff361c67</color>
+    
+    <!-- 文本颜色 -->
+    <color name="color_text_primary">#cc000000</color>
+    <color name="color_text_secondary">#99000000</color>
+    <color name="color_text_tertiary">#66000000</color>
+    <color name="color_text_static_white_primary">#ffffffff</color>
+    <color name="color_text_static_white_secondary">#99ffffff</color>
+    <color name="color_text_static_black">#cc000000</color>
+    <color name="color_text_static_active">#fffd5319</color>
+    <color name="color_text_static_rise">#ff08a088</color>
+    <color name="color_text_static_fall">#ffda3445</color>
+    
+    <!-- 按钮颜色 -->
+    <color name="color_button_background_primary_default">#fffd5319</color>
+    <color name="color_button_background_primary_disable">#fffeb59c</color>
+    <color name="color_button_background_primary_fall">#ffda3445</color>
+    <color name="color_button_background_primary_rise">#ff08a088</color>
+    <color name="color_button_background_secondary_active">#ffffd6c8</color>
+    <color name="color_button_background_secondary_default">#fff5f6f8</color>
+    <color name="color_button_background_secondary_success">#ffd0edd3</color>
+    <color name="color_button_background_secondary_fall">#1ada3445</color>
+    <color name="color_button_background_secondary_rise">#1a08a088</color>
+    <color name="color_button_border_primary_default">#fffd5319</color>
+    <color name="color_button_border_secondary_default">#ffffd6c8</color>
+    
+    <!-- 页面背景 -->
+    <color name="color_page_background_primary">#ffffffff</color>
+    <color name="color_page_background_secondary">#ff1a2e63</color>
+    <color name="color_page_background_mask">#99000000</color>
+    
+    <!-- 表面背景 -->
+    <color name="color_surface_background_primary">#fff5f6f8</color>
+    <color name="color_surface_background_secondary">#ffdfe2e9</color>
+    <color name="color_surface_background_tabbar">#66ffffff</color>
+    
+    <!-- 图标颜色 -->
+    <color name="color_icon_primary">#cc000000</color>
+    <color name="color_icon_disable">#33000000</color>
+    <color name="color_icon_on_color">#ffffffff</color>
+    <color name="color_icon_active">#fffd5319</color>
+    <color name="color_icon_fall">#ffda3445</color>
+    <color name="color_icon_rise">#ff08a088</color>
+    
+    <!-- 反馈颜色 -->
+    <color name="color_feedback_error_default">#ffe50b0b</color>
+    <color name="color_feedback_success_default">#ff3bb346</color>
+    <color name="color_feedback_warning_default">#fffac800</color>
+    
+    <!-- 边框颜色 -->
+    <color name="color_border_line_primary">#ffe9e9e9</color>
+    <color name="color_border_line_active">#fffd5319</color>
+    
+    <!-- 输入框颜色 -->
+    <color name="color_input_background_default">#fff5f6f8</color>
+    <color name="color_input_background_error">#ffe50b0b</color>
+    <color name="color_input_background_active">#fffd5319</color>
+    <color name="color_input_background_disable">#ffdfe2e9</color>
+    <color name="color_input_background_on_color">#ffffffff</color>
+    <color name="color_input_border_active">#fffd5319</color>
+    <color name="color_input_border_error">#ffe50b0b</color>
+    
+    <!-- 复选框颜色 -->
+    <color name="color_checkbox_background">#ffdfe2e9</color>
+    <color name="color_checkbox_border">#1a000000</color>
+    
+    <!-- 开关颜色 -->
+    <color name="color_switch_background_active">#fffd5319</color>
+    <color name="color_switch_background_default">#ff3c3c3c</color>
+    <color name="color_switch_background_on_color">#ffffffff</color>
+    
+    <!-- 单选按钮颜色 -->
+    <color name="color_radio_background_default">#ffdfe2e9</color>
+    <color name="color_radio_background_active">#fffd5319</color>
+    <color name="color_radio_border_default">#1a000000</color>
+    <color name="color_radio_border_active">#fffd5319</color>
+    
+    <!-- 模态框颜色 -->
+    <color name="color_modal_background">#ffffffff</color>
+    
+    <!-- 日期选择器颜色 -->
+    <color name="color_date_pick_background_primary_default">#ffffffff</color>
+    <color name="color_date_pick_background_primary_active">#fffd5319</color>
+    <color name="color_date_pick_background_secondary_active">#ffffd6c8</color>
+    <color name="color_date_pick_border_default">#ffe9e9e9</color>
+    
+    <!-- 标签颜色 -->
+    <color name="color_tag_background_primary_fall">#1ada3445</color>
+    <color name="color_tag_background_primary_rise">#1a08a088</color>
+    <color name="color_tag_background_primary_flat">#1a000000</color>
+    <color name="color_tag_background_primary_default">#ffdfe2e9</color>
+    <color name="color_tag_background_primary_active">#ffffd6c8</color>
+    
+    <!-- 订单状态颜色 -->
+    <color name="color_order_state_started_default">#ff783ee5</color>
+    <color name="color_order_state_progress_default">#fffac800</color>
+    <color name="color_order_state_finish_default">#ff3bb346</color>
+    <color name="color_order_state_rejected_default">#ffe50b0b</color>
+    <color name="color_order_state_cancel_default">#ffa2a2a2</color>
+    
+    <!-- Toast 背景 -->
+    <color name="color_toast_background">#ffffffff</color>
+    
+    <!-- 通知栏颜色 -->
+    <color name="color_notice_bar_background_primary_default">#fffd5319</color>
+    <color name="color_notice_bar_background_secondary_default">#ffffeee8</color>
+    
+    <!-- 品牌背景 -->
+    <color name="color_background_brand_primary_default">#fffd5319</color>
+    
+    <!-- 图表颜色 -->
+    <color name="color_chart_bar_background_fall">#ffda3445</color>
+    <color name="color_chart_bar_background_rise">#ff08a088</color>
+    <color name="color_chart_bar_background_default">#ffa2a2a2</color>
+    <color name="color_chart_bar_background_selected_start">#1affffff</color>
+    <color name="color_chart_bar_background_selected_middle">#66ffffff</color>
+    <color name="color_chart_bar_background_selected_end">#1affffff</color>
+    <color name="color_chart_line_border_fall">#ffda3445</color>
+    <color name="color_chart_line_border_rise">#ff08a088</color>
+    <color name="color_chart_line_border_default">#ffe9e9e9</color>
+    <color name="color_chart_area_background_fall_start">#33da3445</color>
+    <color name="color_chart_area_background_fall_end">#00da3445</color>
+    <color name="color_chart_area_background_rise_start">#3308a088</color>
+    <color name="color_chart_area_background_rise_end">#0008a088</color>
+    <color name="color_chart_index_1">#ffef8f33</color>
+    <color name="color_chart_index_2">#ff14abe0</color>
+    <color name="color_chart_index_3">#ffe075d5</color>
+    <color name="color_chart_index_4">#ff5d9b6a</color>
+    <color name="color_chart_index_5">#ffeecc51</color>
+    <color name="color_chart_index_6">#ff0d7deb</color>
+    
+    <!-- 图表橙色系 -->
+    <color name="chart_orange_10">#fffdf4eb</color>
+    <color name="chart_orange_20">#fffbe4ce</color>
+    <color name="chart_orange_30">#fff8cfa7</color>
+    <color name="chart_orange_40">#fff5b87e</color>
+    <color name="chart_orange_50">#fff2a358</color>
+    <color name="chart_orange_60">#ffef8f33</color>
+    <color name="chart_orange_70">#ffcb7a2b</color>
+    <color name="chart_orange_80">#ffaa6624</color>
+    <color name="chart_orange_90">#ff88521d</color>
+    <color name="chart_orange_100">#ff6c4017</color>
+    
+    <!-- 图表蓝色系 -->
+    <color name="chart_blue_10">#ffe8f7fc</color>
+    <color name="chart_blue_20">#ffc7ebf8</color>
+    <color name="chart_blue_30">#ff9adbf2</color>
+    <color name="chart_blue_40">#ff6bcaeb</color>
+    <color name="chart_blue_50">#ff3ebae6</color>
+    <color name="chart_blue_60">#ff14abe0</color>
+    <color name="chart_blue_70">#ff1191be</color>
+    <color name="chart_blue_80">#ff0e799f</color>
+    <color name="chart_blue_90">#ff0b6180</color>
+    <color name="chart_blue_100">#ff094d65</color>
+    
+    <!-- 图表紫色系 -->
+    <color name="chart_violet_10">#fffcf1fb</color>
+    <color name="chart_violet_20">#fff8def5</color>
+    <color name="chart_violet_30">#fff2c4ed</color>
+    <color name="chart_violet_40">#ffeba8e5</color>
+    <color name="chart_violet_50">#ffe68edd</color>
+    <color name="chart_violet_60">#ffe075d5</color>
+    <color name="chart_violet_70">#ffbe63b5</color>
+    <color name="chart_violet_80">#ff9f5397</color>
+    <color name="chart_violet_90">#ff804379</color>
+    <color name="chart_violet_100">#ff653560</color>
+    
+    <!-- 图表绿色系 -->
+    <color name="chart_green_10">#ffeff5f0</color>
+    <color name="chart_green_20">#ffd8e7db</color>
+    <color name="chart_green_30">#ffb9d4bf</color>
+    <color name="chart_green_40">#ff99c0a1</color>
+    <color name="chart_green_50">#ff7aad85</color>
+    <color name="chart_green_60">#ff5d9b6a</color>
+    <color name="chart_green_70">#ff4f845a</color>
+    <color name="chart_green_80">#ff426e4b</color>
+    <color name="chart_green_90">#ff35583c</color>
+    <color name="chart_green_100">#ff2a4630</color>
+    
+    <!-- 图表黄色系 -->
+    <color name="chart_yellow_10">#fffdfaee</color>
+    <color name="chart_yellow_20">#fffbf3d5</color>
+    <color name="chart_yellow_30">#fff8e9b4</color>
+    <color name="chart_yellow_40">#fff4df91</color>
+    <color name="chart_yellow_50">#fff1d570</color>
+    <color name="chart_yellow_60">#ffeecc51</color>
+    <color name="chart_yellow_70">#ffcaad45</color>
+    <color name="chart_yellow_80">#ffa9913a</color>
+    <color name="chart_yellow_90">#ff88742e</color>
+    <color name="chart_yellow_100">#ff6b5c24</color>
+    
+    <!-- 图表蓝色2系 -->
+    <color name="chart_blue2_10">#ffe7f2fd</color>
+    <color name="chart_blue2_20">#ffc5e0fa</color>
+    <color name="chart_blue2_30">#ff97c7f6</color>
+    <color name="chart_blue2_40">#ff67adf2</color>
+    <color name="chart_blue2_50">#ff3994ef</color>
+    <color name="chart_blue2_60">#ff0d7deb</color>
+    <color name="chart_blue2_70">#ff0b6ac8</color>
+    <color name="chart_blue2_80">#ff0959a7</color>
+    <color name="chart_blue2_90">#ff074786</color>
+    <color name="chart_blue2_100">#ff06386a</color>
 </resources>

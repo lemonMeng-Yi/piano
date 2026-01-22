@@ -11,6 +11,7 @@ import com.example.piano.ui.auth.screens.ForgotPasswordPage
 import com.example.piano.ui.auth.screens.LoginPage
 import com.example.piano.ui.auth.screens.RegisterPage
 import com.example.piano.ui.auth.viewmodel.AuthViewModel
+import com.example.piano.ui.components.SnackBarManager
 
 /**
  * 认证导航 (AuthNavHost)
@@ -51,10 +52,13 @@ fun AuthNavHost(
                 onLoginClick = { username, password ->
                     authViewModel.login(username, password) { success, errorMessage ->
                         if (success) {
+                            SnackBarManager.showSuccess("登录成功")
                             onLoginSuccess()
                         } else {
-                            // TODO: 显示错误提示
-                            // errorMessage 包含错误信息
+                            // 显示错误提示
+                            SnackBarManager.showError(
+                                errorMessage ?: "登录失败"
+                            )
                         }
                     }
                 }
@@ -69,9 +73,12 @@ fun AuthNavHost(
                         if (success) {
                             // 注册成功后直接跳转到登录页面
                             navigationActions.navigateToLogin()
+                            SnackBarManager.showSuccess("注册成功")
                         } else {
-                            // TODO: 显示错误提示
-                            // errorMessage 包含错误信息
+                            // 显示错误提示
+                            SnackBarManager.showError(
+                                errorMessage ?: "注册失败"
+                            )
                         }
                     }
                 }
@@ -86,9 +93,12 @@ fun AuthNavHost(
                         if (success) {
                             // 重置密码成功后跳转到登录页面
                             navigationActions.navigateToLogin()
+                            SnackBarManager.showSuccess("密码重置成功")
                         } else {
-                            // TODO: 显示错误提示
-                            // errorMessage 包含错误信息
+                            // 显示错误提示
+                            SnackBarManager.showError(
+                                errorMessage ?: "密码重置失败"
+                            )
                         }
                     }
                 }

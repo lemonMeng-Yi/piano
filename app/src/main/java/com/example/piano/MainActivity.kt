@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -17,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.piano.navigation.AuthNavHost
 import com.example.piano.navigation.MainNavHost
 import com.example.piano.core.network.util.TokenManager
+import com.example.piano.ui.components.AppSnackBarHost
 import com.example.piano.ui.theme.PianoTheme
 
 class MainActivity : ComponentActivity() {
@@ -31,7 +33,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    PianoTutorApp()
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        PianoTutorApp()
+                        // 全局 Snackbar 宿主
+                        AppSnackBarHost()
+                    }
                 }
             }
         }
