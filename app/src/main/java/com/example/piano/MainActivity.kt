@@ -61,6 +61,12 @@ fun PianoTutorApp() {
         )
     } else {
         // 主功能导航：管理应用核心功能页面
-        MainNavHost(navController = navController)
+        MainNavHost(
+            navController = navController,
+            onLogout = {
+                // 退出登录，直接更新状态，界面会自动切换
+                isLoggedIn = false
+            }
+        )
     }
 }

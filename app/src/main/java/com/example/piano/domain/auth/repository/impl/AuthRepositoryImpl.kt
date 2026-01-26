@@ -37,4 +37,12 @@ class AuthRepositoryImpl : AuthRepository {
     ): ResponseState<String> {
         return authApiService.forgotPassword(ForgotPasswordRequest(username, password)).toState()
     }
+    
+    override suspend fun logout(): ResponseState<String> {
+        return try {
+            authApiService.logout().toState()
+        } catch (e: Exception) {
+            ResponseState.UnknownError(e)
+        }
+    }
 }

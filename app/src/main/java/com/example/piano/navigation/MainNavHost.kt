@@ -43,11 +43,13 @@ import com.example.pianotutor.ui.screens.ProgressPage
  * 负责管理用户日常使用的所有功能页面
  *
  * @param navController 导航控制器，用于管理页面跳转
+ * @param onLogout 退出登录回调，用于更新登录状态
  * @param modifier 修饰符，用于自定义布局
  */
 @Composable
 fun MainNavHost(
     navController: NavHostController,
+    onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val navigationActions = NavigationActions(navController)
@@ -107,7 +109,7 @@ fun MainNavHost(
                 }
                 
                 composable(NavRoutes.PROFILE) {
-                    ProfilePage()
+                    ProfilePage(onLogout = onLogout)
                 }
             }
         }

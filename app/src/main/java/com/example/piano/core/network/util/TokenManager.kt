@@ -85,7 +85,7 @@ object TokenManager {
      * @return true 表示已过期，false 表示未过期
      */
     // todo token有效期暂时设为1s
-    fun isTokenExpired(expireTimeMillis: Long = 1000L): Boolean {
+    fun isTokenExpired(expireTimeMillis: Long =  7 * 24 * 60 * 60 * 1000L): Boolean {
         val timestamp = getTokenTimestamp()
         if (timestamp == 0L) return true // 没有时间戳，视为过期
         

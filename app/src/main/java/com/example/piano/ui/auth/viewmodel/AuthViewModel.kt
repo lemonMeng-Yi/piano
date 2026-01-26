@@ -145,4 +145,34 @@ class AuthViewModel(
             }
         }
     }
+    
+    /**
+     * 退出登录
+     * 
+     * @param onResult 结果回调 (success: Boolean, errorMessage: String?)
+     */
+    fun logout(onResult: (Boolean, String?) -> Unit) {
+        viewModelScope.launch {
+            when (val result = authRepository.logout()) {
+                is ResponseState.Success -> {
+                    // 退出登录成功，清除本地 Token
+                    TokenManager.clearToken()
+                    LogUtils.d("退出登录成功")
+                    onResult(true, null)
+                }
+                is ResponseState.NetworkError -> {
+                    // 网络错误或业务错误，即使失败也清除本地 Token
+                    TokenManager.clearToken()
+                    LogUtils.w("退出登录失败，但已清除本地 Token: ${result.msg}")
+                    onResult(false, result.msg)
+                }
+                is ResponseState.UnknownError -> {
+                    // 未知错误，即使失败也清除本地 Token
+                    TokenManager.clearToken()
+                    LogUtils.w("退出登录异常，但已清除本地 Token: ${result.throwable?.message}")
+                    onResult(false, result.throwable?.message ?: "未知错误")
+                }
+            }
+        }
+    }
 }

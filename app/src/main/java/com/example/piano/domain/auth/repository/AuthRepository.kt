@@ -29,4 +29,8 @@ interface AuthRepository {
         password: String
     ): ResponseState<String>
     
+    /**
+     * 退出登录
+     */
+    suspend fun logout(): ResponseState<String>
 }

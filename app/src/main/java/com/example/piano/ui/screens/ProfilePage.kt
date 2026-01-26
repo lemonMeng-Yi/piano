@@ -18,9 +18,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.piano.domain.auth.repository.AuthRepository
+import com.example.piano.domain.auth.repository.impl.AuthRepositoryImpl
+import com.example.piano.ui.auth.viewmodel.AuthViewModel
+import com.example.piano.ui.components.SnackBarManager
 
 @Composable
-fun ProfilePage() {
+fun ProfilePage(
+    onLogout: () -> Unit
+) {
+    // 创建 AuthViewModel
+    val authRepository: AuthRepository = remember { AuthRepositoryImpl() }
+    val authViewModel: AuthViewModel = viewModel {
+        AuthViewModel(authRepository)
+    }
     var darkMode by remember { mutableStateOf(false) }
 
     Column(
@@ -185,7 +197,18 @@ fun ProfilePage() {
                 SettingsItem(
                     icon = Icons.Default.ExitToApp,
                     label = "退出登录",
-                    onClick = { },
+                    onClick = {
+                        // 调用退出登录，成功后直接跳转到登录页
+                        authViewModel.logout { success, errorMessage ->
+                            if (success) {
+                                SnackBarManager.showSuccess("退出登录成功")
+                                // 直接调用 onLogout，更新登录状态并跳转
+                                onLogout()
+                            } else {
+                                SnackBarManager.showError(errorMessage ?: "退出登录失败")
+                            }
+                        }
+                    },
                     iconTint = MaterialTheme.colorScheme.error,
                     showDivider = false
                 )

@@ -16,5 +16,8 @@ object ApiPaths {
     
     /** 忘记密码 */
     const val FORGOT_PASSWORD = "users/auth/forgot-password"
+    
+    /** 退出登录 */
+    const val LOGOUT = "users/auth/logout"
 
 }

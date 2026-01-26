@@ -43,4 +43,13 @@ interface AuthApi {
      */
     @POST("users/auth/forgot-password")
     suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<BaseResult<String>>
+    
+    /**
+     * 退出登录
+     * 路径: users/auth/logout
+     * 
+     * @return 退出登录响应（成功消息）
+     */
+    @POST("users/auth/logout")
+    suspend fun logout(): Response<BaseResult<String>>
 }
