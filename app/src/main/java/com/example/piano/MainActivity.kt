@@ -20,7 +20,9 @@ import com.example.piano.navigation.MainNavHost
 import com.example.piano.core.network.util.TokenManager
 import com.example.piano.ui.components.AppSnackBarHost
 import com.example.piano.ui.theme.PianoTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // 安装Splash NavRoutes

@@ -6,13 +6,16 @@ import com.blankj.utilcode.util.LogUtils
 import com.example.piano.core.network.util.ResponseState
 import com.example.piano.core.network.util.TokenManager
 import com.example.piano.domain.auth.repository.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * 认证 ViewModel
  * 处理登录、注册等认证相关的 UI 逻辑
  */
-class AuthViewModel(
+@HiltViewModel
+class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
     

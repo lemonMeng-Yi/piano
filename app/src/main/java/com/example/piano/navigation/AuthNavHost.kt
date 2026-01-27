@@ -1,12 +1,11 @@
 package com.example.piano.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.piano.domain.auth.repository.impl.AuthRepositoryImpl
 import com.example.piano.ui.auth.screens.ForgotPasswordPage
 import com.example.piano.ui.auth.screens.LoginPage
 import com.example.piano.ui.auth.screens.RegisterPage
@@ -37,16 +36,13 @@ fun AuthNavHost(
     onLoginSuccess: () -> Unit
 ) {
     val navigationActions = NavigationActions(navController)
-    val authRepository = remember { AuthRepositoryImpl() }
-    val authViewModel: AuthViewModel = viewModel { 
-        AuthViewModel(authRepository)
-    }
     
     NavHost(
         navController = navController,
         startDestination = NavRoutes.LOGIN
     ) {
         composable(NavRoutes.LOGIN) {
+            val authViewModel: AuthViewModel = hiltViewModel()
             LoginPage(
                 navigationActions = navigationActions,
                 onLoginClick = { username, password ->
@@ -66,6 +62,7 @@ fun AuthNavHost(
         }
         
         composable(NavRoutes.REGISTER) {
+            val authViewModel: AuthViewModel = hiltViewModel()
             RegisterPage(
                 navigationActions = navigationActions,
                 onRegisterClick = { username, password, confirmPassword ->
@@ -86,6 +83,7 @@ fun AuthNavHost(
         }
         
         composable(NavRoutes.FORGOT_PASSWORD) {
+            val authViewModel: AuthViewModel = hiltViewModel()
             ForgotPasswordPage(
                 navigationActions = navigationActions,
                 onForgotPasswordClick = { username, password, confirmPassword ->

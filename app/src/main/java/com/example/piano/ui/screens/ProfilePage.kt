@@ -18,21 +18,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.piano.domain.auth.repository.AuthRepository
-import com.example.piano.domain.auth.repository.impl.AuthRepositoryImpl
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.piano.ui.auth.viewmodel.AuthViewModel
 import com.example.piano.ui.components.SnackBarManager
 
 @Composable
 fun ProfilePage(
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
-    // 创建 AuthViewModel
-    val authRepository: AuthRepository = remember { AuthRepositoryImpl() }
-    val authViewModel: AuthViewModel = viewModel {
-        AuthViewModel(authRepository)
-    }
     var darkMode by remember { mutableStateOf(false) }
 
     Column(

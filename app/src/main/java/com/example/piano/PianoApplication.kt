@@ -2,12 +2,13 @@ package com.example.piano
 
 import android.app.Application
 import com.blankj.utilcode.util.Utils
-import com.example.piano.core.network.util.TokenManager
+import dagger.hilt.android.HiltAndroidApp
 
 /**
  * 应用程序入口类
  * 用于初始化全局组件
  */
+@HiltAndroidApp
 class PianoApplication : Application() {
     
     override fun onCreate() {
