@@ -21,8 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.piano.navigation.NavigationActions
-import com.example.piano.ui.theme.PianoBlue40
-import com.example.piano.ui.theme.PianoBlueGrey40
+import com.example.piano.ui.theme.PianoTheme
 
 @Composable
 fun RegisterPage(
@@ -37,7 +36,7 @@ fun RegisterPage(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color.White
+        color = PianoTheme.colors.background
     ) {
         Column(
             modifier = Modifier
@@ -54,7 +53,7 @@ fun RegisterPage(
                 text = "小AI在线",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = PianoBlueGrey40,
+                color = PianoTheme.colors.textPrimary,
                 textAlign = TextAlign.Center
             )
             
@@ -63,7 +62,7 @@ fun RegisterPage(
             Text(
                 text = "错音下线！",
                 fontSize = 20.sp,
-                color = PianoBlue40,
+                color = PianoTheme.colors.textSecondary,
                 textAlign = TextAlign.Center
             )
             
@@ -79,16 +78,19 @@ fun RegisterPage(
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = "用户名",
-                        tint = PianoBlue40
+                        tint = PianoTheme.colors.primary
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PianoBlue40,
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedLabelColor = PianoBlue40,
-                    unfocusedLabelColor = Color(0xFF757575)
+                    focusedBorderColor = PianoTheme.colors.primary,
+                    unfocusedBorderColor = PianoTheme.colors.border,
+                    focusedLabelColor = PianoTheme.colors.primary,
+                    unfocusedLabelColor = PianoTheme.colors.textSecondary,
+                    focusedTextColor = PianoTheme.colors.textPrimary,
+                    unfocusedTextColor = PianoTheme.colors.textPrimary,
+                    cursorColor = PianoTheme.colors.primary
                 ),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
@@ -106,16 +108,19 @@ fun RegisterPage(
                     Icon(
                         imageVector = Icons.Default.Lock,
                         contentDescription = "密码",
-                        tint = PianoBlue40
+                        tint = PianoTheme.colors.primary
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PianoBlue40,
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedLabelColor = PianoBlue40,
-                    unfocusedLabelColor = Color(0xFF757575)
+                    focusedBorderColor = PianoTheme.colors.primary,
+                    unfocusedBorderColor = PianoTheme.colors.border,
+                    focusedLabelColor = PianoTheme.colors.primary,
+                    unfocusedLabelColor = PianoTheme.colors.textSecondary,
+                    focusedTextColor = PianoTheme.colors.textPrimary,
+                    unfocusedTextColor = PianoTheme.colors.textPrimary,
+                    cursorColor = PianoTheme.colors.primary
                 ),
                 visualTransformation = if (passwordVisible) {
                     VisualTransformation.None
@@ -127,7 +132,7 @@ fun RegisterPage(
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = if (passwordVisible) "隐藏密码" else "显示密码",
-                            tint = PianoBlue40
+                            tint = PianoTheme.colors.primary
                         )
                     }
                 },
@@ -147,16 +152,19 @@ fun RegisterPage(
                     Icon(
                         imageVector = Icons.Default.Lock,
                         contentDescription = "确认密码",
-                        tint = PianoBlue40
+                        tint = PianoTheme.colors.primary
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PianoBlue40,
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedLabelColor = PianoBlue40,
-                    unfocusedLabelColor = Color(0xFF757575)
+                    focusedBorderColor = PianoTheme.colors.primary,
+                    unfocusedBorderColor = PianoTheme.colors.border,
+                    focusedLabelColor = PianoTheme.colors.primary,
+                    unfocusedLabelColor = PianoTheme.colors.textSecondary,
+                    focusedTextColor = PianoTheme.colors.textPrimary,
+                    unfocusedTextColor = PianoTheme.colors.textPrimary,
+                    cursorColor = PianoTheme.colors.primary
                 ),
                 visualTransformation = if (confirmPasswordVisible) {
                     VisualTransformation.None
@@ -168,7 +176,7 @@ fun RegisterPage(
                         Icon(
                             imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = if (confirmPasswordVisible) "隐藏密码" else "显示密码",
-                            tint = PianoBlue40
+                            tint = PianoTheme.colors.primary
                         )
                     }
                 },
@@ -181,7 +189,7 @@ fun RegisterPage(
             if (confirmPassword.isNotBlank() && password != confirmPassword) {
                 Text(
                     text = "两次输入的密码不一致",
-                    color = MaterialTheme.colorScheme.error,
+                    color = PianoTheme.colors.error,
                     fontSize = 12.sp,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -199,8 +207,8 @@ fun RegisterPage(
                     .height(48.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PianoBlue40,
-                    contentColor = Color.White
+                    containerColor = PianoTheme.colors.primary,
+                    contentColor = PianoTheme.colors.onPrimary
                 ),
                 enabled = username.isNotBlank() && 
                          password.isNotBlank() && 
@@ -225,7 +233,7 @@ fun RegisterPage(
                 Text(
                     text = "已有账号？",
                     fontSize = 14.sp,
-                    color = Color(0xFF757575)
+                    color = PianoTheme.colors.textSecondary
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 TextButton(
@@ -234,7 +242,7 @@ fun RegisterPage(
                     Text(
                         text = "立即登录",
                         fontSize = 14.sp,
-                        color = PianoBlue40,
+                        color = PianoTheme.colors.primary,
                         fontWeight = FontWeight.Medium
                     )
                 }

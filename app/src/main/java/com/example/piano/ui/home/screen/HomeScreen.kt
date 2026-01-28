@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.piano.ui.theme.PianoTheme
 
 @Composable
 fun HomePage() {
@@ -37,7 +38,7 @@ fun HomePage() {
         Text(
             text = "继续你的钢琴学习之旅",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
@@ -47,7 +48,7 @@ fun HomePage() {
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                containerColor = PianoTheme.colors.primaryContainer.copy(alpha = 0.3f)
             )
         ) {
             Column(
@@ -79,7 +80,7 @@ fun HomePage() {
                 Text(
                     text = "继续练习《月光奏鸣曲》",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
                     modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
                 )
 
@@ -93,13 +94,13 @@ fun HomePage() {
                         Text(
                             text = "今日目标进度",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
                         )
                         Text(
                             text = "65%",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.primary
+                            color = PianoTheme.colors.primary
                         )
                     }
                     LinearProgressIndicator(
@@ -140,14 +141,14 @@ fun HomePage() {
                 icon = Icons.Default.TrendingUp,
                 value = "7",
                 label = "连续练习天数",
-                iconTint = MaterialTheme.colorScheme.primary
+                iconTint = PianoTheme.colors.primary
             )
             StatCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.EmojiEvents,
                 value = "12",
                 label = "已完成曲目",
-                iconTint = MaterialTheme.colorScheme.secondary
+                iconTint = PianoTheme.colors.secondary
             )
         }
 
@@ -223,7 +224,7 @@ fun StatCard(
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
                 )
             }
         }
@@ -250,13 +251,13 @@ fun PracticeItemCard(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                    .background(PianoTheme.colors.primary.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Default.MusicNote,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = PianoTheme.colors.primary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -270,7 +271,7 @@ fun PracticeItemCard(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
                 )
             }
             Column(
@@ -280,12 +281,12 @@ fun PracticeItemCard(
                     text = "$accuracy%",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = PianoTheme.colors.primary
                 )
                 Text(
                     text = time,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
                 )
             }
         }

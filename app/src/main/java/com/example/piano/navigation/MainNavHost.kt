@@ -9,8 +9,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
+import com.example.piano.ui.theme.PianoTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -22,9 +22,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.piano.ui.home.screen.HomePage
-import com.example.piano.ui.practice.screen.PracticePage
-import com.example.piano.ui.profile.screen.ProfilePage
-import com.example.piano.ui.progress.screen.ProgressPage
+import com.example.piano.ui.practice.PracticePage
+import com.example.piano.ui.profile.ProfilePage
+import com.example.piano.ui.progress.ProgressPage
 
 /**
  * 功能级导航 (MainNavHost)
@@ -61,7 +61,7 @@ fun MainNavHost(
     Scaffold(
         bottomBar = {
             NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = PianoTheme.colors.surface
             ) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Home, contentDescription = "首页") },

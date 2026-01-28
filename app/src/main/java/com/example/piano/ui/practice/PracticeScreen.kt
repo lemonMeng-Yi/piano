@@ -1,4 +1,4 @@
-package com.example.piano.ui.practice.screen
+package com.example.piano.ui.practice
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.piano.ui.theme.PianoTheme
 
 @Composable
 fun PracticePage() {
@@ -38,7 +39,7 @@ fun PracticePage() {
         Text(
             text = "实时分析你的演奏，提供即时反馈",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
@@ -48,7 +49,7 @@ fun PracticePage() {
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                containerColor = PianoTheme.colors.primaryContainer.copy(alpha = 0.3f)
             )
         ) {
             Column(
@@ -62,7 +63,7 @@ fun PracticePage() {
                 Text(
                     text = "路德维希·凡·贝多芬",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
                     modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
                 )
 
@@ -76,7 +77,7 @@ fun PracticePage() {
                         Text(
                             text = "练习进度",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
                         )
                         Text(
                             text = "${(progress * 100).toInt()}%",
@@ -145,7 +146,7 @@ fun PracticePage() {
                     title = "手势识别",
                     description = "正在分析手指位置",
                     status = "活跃",
-                    statusColor = MaterialTheme.colorScheme.primary
+                    statusColor = PianoTheme.colors.primary
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 FeedbackItem(
@@ -153,7 +154,7 @@ fun PracticePage() {
                     title = "音频分析",
                     description = "检测音准和节奏",
                     status = "活跃",
-                    statusColor = MaterialTheme.colorScheme.secondary
+                    statusColor = PianoTheme.colors.secondary
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 FeedbackItem(
@@ -161,7 +162,7 @@ fun PracticePage() {
                     title = "节奏跟踪",
                     description = "监测演奏速度",
                     status = "待机",
-                    statusColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    statusColor = PianoTheme.colors.onSurface.copy(alpha = 0.4f)
                 )
             }
         }
@@ -177,19 +178,19 @@ fun PracticePage() {
                 modifier = Modifier.weight(1f),
                 value = "92%",
                 label = "准确率",
-                color = MaterialTheme.colorScheme.primary
+                color = PianoTheme.colors.primary
             )
             MetricCard(
                 modifier = Modifier.weight(1f),
                 value = "88%",
                 label = "节奏",
-                color = MaterialTheme.colorScheme.secondary
+                color = PianoTheme.colors.secondary
             )
             MetricCard(
                 modifier = Modifier.weight(1f),
                 value = "85%",
                 label = "音准",
-                color = MaterialTheme.colorScheme.onSurface
+                color = PianoTheme.colors.onSurface
             )
         }
 
@@ -211,24 +212,24 @@ fun PracticePage() {
                     emoji = "✓",
                     title = "手指位置准确",
                     description = "你的手指位置非常标准，继续保持！",
-                    backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                    titleColor = MaterialTheme.colorScheme.primary
+                    backgroundColor = PianoTheme.colors.primary.copy(alpha = 0.1f),
+                    titleColor = PianoTheme.colors.primary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 SuggestionItem(
                     emoji = "⚠",
                     title = "注意节奏",
                     description = "第12-16小节的节奏稍快，建议放慢速度练习",
-                    backgroundColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
-                    titleColor = MaterialTheme.colorScheme.secondary
+                    backgroundColor = PianoTheme.colors.secondary.copy(alpha = 0.1f),
+                    titleColor = PianoTheme.colors.secondary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 SuggestionItem(
                     emoji = "💡",
                     title = "练习建议",
                     description = "建议重点练习左手和弦部分，可以提高整体流畅度",
-                    backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
-                    titleColor = MaterialTheme.colorScheme.onSurface
+                    backgroundColor = PianoTheme.colors.surfaceVariant,
+                    titleColor = PianoTheme.colors.onSurface
                 )
             }
         }
@@ -245,7 +246,7 @@ fun FeedbackItem(
 ) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = PianoTheme.colors.surfaceVariant
         )
     ) {
         Row(
@@ -270,7 +271,7 @@ fun FeedbackItem(
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
                 )
             }
             AssistChip(
@@ -308,7 +309,7 @@ fun MetricCard(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
@@ -340,7 +341,7 @@ fun SuggestionItem(
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.padding(top = 4.dp)
             )
         }

@@ -1,4 +1,4 @@
-package com.example.piano.ui.progress.screen
+package com.example.piano.ui.progress
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.piano.ui.theme.PianoTheme
 
 @Composable
 fun ProgressPage() {
@@ -35,7 +36,7 @@ fun ProgressPage() {
         Text(
             text = "追踪你的练习成果",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
@@ -51,18 +52,18 @@ fun ProgressPage() {
                 icon = Icons.Default.CalendarToday,
                 value = "7天",
                 label = "连续练习",
-                backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                iconColor = MaterialTheme.colorScheme.primary,
-                valueColor = MaterialTheme.colorScheme.primary
+                backgroundColor = PianoTheme.colors.primary.copy(alpha = 0.1f),
+                iconColor = PianoTheme.colors.primary,
+                valueColor = PianoTheme.colors.primary
             )
             ProgressStatCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.TrendingUp,
                 value = "24h",
                 label = "总练习时长",
-                backgroundColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
-                iconColor = MaterialTheme.colorScheme.secondary,
-                valueColor = MaterialTheme.colorScheme.secondary
+                backgroundColor = PianoTheme.colors.secondary.copy(alpha = 0.1f),
+                iconColor = PianoTheme.colors.secondary,
+                valueColor = PianoTheme.colors.secondary
             )
         }
 
@@ -98,15 +99,15 @@ fun ProgressPage() {
                             )
                         },
                         colors = AssistChipDefaults.assistChipColors(
-                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                            labelColor = MaterialTheme.colorScheme.primary
+                            containerColor = PianoTheme.colors.primary.copy(alpha = 0.2f),
+                            labelColor = PianoTheme.colors.primary
                         )
                     )
                 }
                 Text(
                     text = "练习 10 小时",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
@@ -119,13 +120,13 @@ fun ProgressPage() {
                     Text(
                         text = "已完成",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
                     )
                     Text(
                         text = "7.5 / 10 小时",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = PianoTheme.colors.primary
                     )
                 }
                 LinearProgressIndicator(
@@ -138,7 +139,7 @@ fun ProgressPage() {
                 Text(
                     text = "还需练习 2.5 小时即可完成本周目标 🎯",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
@@ -162,7 +163,7 @@ fun ProgressPage() {
                 Text(
                     text = "最近 7 天",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
@@ -170,21 +171,21 @@ fun ProgressPage() {
                     label = "平均准确率",
                     value = "89%",
                     progress = 0.89f,
-                    progressColor = MaterialTheme.colorScheme.primary
+                    progressColor = PianoTheme.colors.primary
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 PerformanceMetricRow(
                     label = "节奏稳定性",
                     value = "85%",
                     progress = 0.85f,
-                    progressColor = MaterialTheme.colorScheme.secondary
+                    progressColor = PianoTheme.colors.secondary
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 PerformanceMetricRow(
                     label = "音准控制",
                     value = "82%",
                     progress = 0.82f,
-                    progressColor = MaterialTheme.colorScheme.onSurface
+                    progressColor = PianoTheme.colors.onSurface
                 )
             }
         }
@@ -207,7 +208,7 @@ fun ProgressPage() {
                 Text(
                     text = "你已获得 8 个徽章",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
@@ -304,7 +305,7 @@ fun ProgressStatCard(
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
                 )
             }
             Text(
@@ -334,7 +335,7 @@ fun PerformanceMetricRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
             )
             Text(
                 text = value,
@@ -371,9 +372,9 @@ fun AchievementBadge(
                 .clip(CircleShape)
                 .background(
                     if (unlocked) {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                        PianoTheme.colors.primary.copy(alpha = 0.15f)
                     } else {
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        PianoTheme.colors.surfaceVariant.copy(alpha = 0.5f)
                     }
                 ),
             contentAlignment = Alignment.Center
@@ -391,9 +392,9 @@ fun AchievementBadge(
             text = label,
             style = MaterialTheme.typography.bodySmall,
             color = if (unlocked) {
-                MaterialTheme.colorScheme.onSurface
+                PianoTheme.colors.onSurface
             } else {
-                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                PianoTheme.colors.onSurface.copy(alpha = 0.4f)
             }
         )
     }
@@ -408,7 +409,7 @@ fun PracticeHistoryItem(
 ) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = PianoTheme.colors.surfaceVariant
         )
     ) {
         Row(
@@ -427,7 +428,7 @@ fun PracticeHistoryItem(
                 Text(
                     text = "$duration · $pieces 首曲目",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
                     modifier = Modifier.padding(top = 2.dp)
                 )
             }
@@ -438,12 +439,12 @@ fun PracticeHistoryItem(
                     text = "$accuracy%",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = PianoTheme.colors.primary
                 )
                 Text(
                     text = "准确率",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
                 )
             }
         }

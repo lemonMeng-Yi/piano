@@ -33,6 +33,9 @@ abstract class AppModule {
     /**
      * 绑定 AuthRepository 接口到 AuthRepositoryImpl 实现
      * Hilt 会自动注入 AuthApi 到 AuthRepositoryImpl 的构造函数
+     * 
+     * 注意：ThemeManager 不需要在这里提供，因为它已经有 @Singleton 和 @Inject 注解
+     * Hilt 会自动处理它的依赖注入
      */
     @Binds
     @Singleton

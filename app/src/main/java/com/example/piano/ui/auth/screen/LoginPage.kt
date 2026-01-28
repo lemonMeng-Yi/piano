@@ -21,8 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.piano.navigation.NavigationActions
-import com.example.piano.ui.theme.PianoBlue40
-import com.example.piano.ui.theme.PianoBlueGrey40
+import com.example.piano.ui.theme.PianoTheme
 
 @Composable
 fun LoginPage(
@@ -35,7 +34,7 @@ fun LoginPage(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color.White
+        color = PianoTheme.colors.background
     ) {
         Column(
             modifier = Modifier
@@ -52,7 +51,7 @@ fun LoginPage(
                 text = "小AI在线",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = PianoBlueGrey40,
+                color = PianoTheme.colors.textPrimary,
                 textAlign = TextAlign.Center
             )
             
@@ -61,7 +60,7 @@ fun LoginPage(
             Text(
                 text = "错音下线！",
                 fontSize = 20.sp,
-                color = PianoBlueGrey40,
+                color = PianoTheme.colors.textSecondary,
                 textAlign = TextAlign.Center
             )
             
@@ -77,16 +76,19 @@ fun LoginPage(
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = "用户名",
-                        tint = PianoBlue40
+                        tint = PianoTheme.colors.primary
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PianoBlue40,
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedLabelColor = PianoBlue40,
-                    unfocusedLabelColor = Color(0xFF757575)
+                    focusedBorderColor = PianoTheme.colors.primary,
+                    unfocusedBorderColor = PianoTheme.colors.border,
+                    focusedLabelColor = PianoTheme.colors.primary,
+                    unfocusedLabelColor = PianoTheme.colors.textSecondary,
+                    focusedTextColor = PianoTheme.colors.textPrimary,
+                    unfocusedTextColor = PianoTheme.colors.textPrimary,
+                    cursorColor = PianoTheme.colors.primary
                 ),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
@@ -104,16 +106,19 @@ fun LoginPage(
                     Icon(
                         imageVector = Icons.Default.Lock,
                         contentDescription = "密码",
-                        tint = PianoBlue40
+                        tint = PianoTheme.colors.primary
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PianoBlue40,
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedLabelColor = PianoBlue40,
-                    unfocusedLabelColor = Color(0xFF757575)
+                    focusedBorderColor = PianoTheme.colors.primary,
+                    unfocusedBorderColor = PianoTheme.colors.border,
+                    focusedLabelColor = PianoTheme.colors.primary,
+                    unfocusedLabelColor = PianoTheme.colors.textSecondary,
+                    focusedTextColor = PianoTheme.colors.textPrimary,
+                    unfocusedTextColor = PianoTheme.colors.textPrimary,
+                    cursorColor = PianoTheme.colors.primary
                 ),
                 visualTransformation = if (passwordVisible) {
                     VisualTransformation.None
@@ -125,7 +130,7 @@ fun LoginPage(
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = if (passwordVisible) "隐藏密码" else "显示密码",
-                            tint = PianoBlue40
+                            tint = PianoTheme.colors.primary
                         )
                     }
                 },
@@ -143,8 +148,8 @@ fun LoginPage(
                     .height(48.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PianoBlue40,
-                    contentColor = Color.White
+                    containerColor = PianoTheme.colors.primary,
+                    contentColor = PianoTheme.colors.onPrimary
                 ),
                 enabled = username.isNotBlank() && password.isNotBlank()
             ) {
@@ -170,7 +175,7 @@ fun LoginPage(
                     Text(
                         text = "忘记密码？",
                         fontSize = 14.sp,
-                        color = PianoBlue40
+                        color = PianoTheme.colors.primary
                     )
                 }
                 
@@ -181,7 +186,7 @@ fun LoginPage(
                     Text(
                         text = "注册账号",
                         fontSize = 14.sp,
-                        color = PianoBlue40,
+                        color = PianoTheme.colors.primary,
                         fontWeight = FontWeight.Medium
                     )
                 }

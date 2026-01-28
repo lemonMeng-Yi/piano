@@ -1,4 +1,4 @@
-package com.example.piano.ui.profile.screen
+package com.example.piano.ui.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,16 +18,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.piano.core.util.LocalThemeManager
+import com.example.piano.core.util.ThemeManager
 import com.example.piano.ui.auth.viewmodel.AuthViewModel
 import com.example.piano.ui.components.SnackBarManager
+import com.example.piano.ui.theme.AppTheme
+import com.example.piano.ui.theme.PianoTheme
 
 @Composable
 fun ProfilePage(
     onLogout: () -> Unit,
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
-    var darkMode by remember { mutableStateOf(false) }
+    // 从 CompositionLocal 获取 ThemeManager
+    val themeManager = LocalThemeManager.current
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val actualTheme = themeManager.getActualTheme()
+    
+    // 计算当前是否深色模式
+    val isDarkMode = actualTheme == AppTheme.Dark
 
     Column(
         modifier = Modifier
@@ -41,7 +52,7 @@ fun ProfilePage(
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                containerColor = PianoTheme.colors.primaryContainer.copy(alpha = 0.3f)
             )
         ) {
             Row(
@@ -55,8 +66,8 @@ fun ProfilePage(
                         .background(
                             Brush.linearGradient(
                                 colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.secondary
+                                    PianoTheme.colors.primary,
+                                    PianoTheme.colors.secondary
                                 )
                             )
                         ),
@@ -79,7 +90,7 @@ fun ProfilePage(
                     Text(
                         text = "piano_lover@example.com",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
                         modifier = Modifier.padding(top = 2.dp)
                     )
                     Row(
@@ -90,8 +101,8 @@ fun ProfilePage(
                             onClick = { },
                             label = { Text("中级学员") },
                             colors = AssistChipDefaults.assistChipColors(
-                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                                labelColor = MaterialTheme.colorScheme.primary
+                                containerColor = PianoTheme.colors.primary.copy(alpha = 0.2f),
+                                labelColor = PianoTheme.colors.primary
                             )
                         )
                         AssistChip(
@@ -114,19 +125,19 @@ fun ProfilePage(
                 modifier = Modifier.weight(1f),
                 value = "24",
                 label = "练习天数",
-                valueColor = MaterialTheme.colorScheme.primary
+                valueColor = PianoTheme.colors.primary
             )
             ProfileStatCard(
                 modifier = Modifier.weight(1f),
                 value = "12",
                 label = "完成曲目",
-                valueColor = MaterialTheme.colorScheme.secondary
+                valueColor = PianoTheme.colors.secondary
             )
             ProfileStatCard(
                 modifier = Modifier.weight(1f),
                 value = "8",
                 label = "获得徽章",
-                valueColor = MaterialTheme.colorScheme.onSurface
+                valueColor = PianoTheme.colors.onSurface
             )
         }
 
@@ -135,7 +146,7 @@ fun ProfilePage(
             text = "设置",
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
         )
         Card(
@@ -158,11 +169,14 @@ fun ProfilePage(
                     showDivider = true
                 )
                 SettingsItem(
-                    icon = if (darkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
+                    icon = if (isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
                     label = "深色模式",
                     hasToggle = true,
-                    toggleValue = darkMode,
-                    onToggle = { darkMode = !darkMode },
+                    toggleValue = isDarkMode,
+                    onToggle = {
+                        // 切换主题
+                        themeManager.toggleTheme(currentTheme)
+                    },
                     showDivider = false
                 )
             }
@@ -173,7 +187,7 @@ fun ProfilePage(
             text = "支持",
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
         )
         Card(
@@ -203,7 +217,7 @@ fun ProfilePage(
                             }
                         }
                     },
-                    iconTint = MaterialTheme.colorScheme.error,
+                    iconTint = PianoTheme.colors.error,
                     showDivider = false
                 )
             }
@@ -219,12 +233,12 @@ fun ProfilePage(
             Text(
                 text = "AI Piano Practice v1.0.0",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
             )
             Text(
                 text = "© 2025 智能钢琴陪练平台",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
@@ -254,7 +268,7 @@ fun ProfileStatCard(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
@@ -270,7 +284,7 @@ fun SettingsItem(
     toggleValue: Boolean = false,
     onToggle: (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
-    iconTint: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+    iconTint: Color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
     showDivider: Boolean
 ) {
     Column {
@@ -309,8 +323,8 @@ fun SettingsItem(
                         onClick = { },
                         label = { Text(badge) },
                         colors = AssistChipDefaults.assistChipColors(
-                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                            labelColor = MaterialTheme.colorScheme.primary
+                            containerColor = PianoTheme.colors.primary.copy(alpha = 0.2f),
+                            labelColor = PianoTheme.colors.primary
                         )
                     )
                 }
@@ -324,7 +338,7 @@ fun SettingsItem(
                     Icon(
                         Icons.Default.ChevronRight,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        tint = PianoTheme.colors.onSurface.copy(alpha = 0.4f),
                         modifier = Modifier.size(20.dp)
                     )
                 }
