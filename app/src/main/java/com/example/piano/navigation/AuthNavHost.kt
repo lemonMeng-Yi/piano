@@ -6,9 +6,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.piano.ui.auth.screens.ForgotPasswordPage
-import com.example.piano.ui.auth.screens.LoginPage
-import com.example.piano.ui.auth.screens.RegisterPage
+import com.example.piano.ui.auth.screen.ForgotPasswordPage
+import com.example.piano.ui.auth.screen.LoginPage
+import com.example.piano.ui.auth.screen.RegisterPage
 import com.example.piano.ui.auth.viewmodel.AuthViewModel
 import com.example.piano.ui.components.SnackBarManager
 

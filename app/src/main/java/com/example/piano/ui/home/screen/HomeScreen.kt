@@ -1,4 +1,4 @@
-package com.example.pianotutor.ui.screens
+package com.example.piano.ui.home.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

@@ -43,6 +43,7 @@ fun AppSnackBarHost(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .wrapContentSize()
+                .padding(bottom = 45.dp)
                 .imePadding(),
             hostState = SnackBarManager.snackBarHostState,
             snackbar = { data ->

@@ -1,9 +1,9 @@
 package com.example.piano.di
 
 import com.example.piano.core.network.NetworkClient
-import com.example.piano.domain.auth.api.AuthApi
+import com.example.piano.data.auth.api.AuthApi
+import com.example.piano.data.auth.repository.AuthRepositoryImpl
 import com.example.piano.domain.auth.repository.AuthRepository
-import com.example.piano.domain.auth.repository.impl.AuthRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides

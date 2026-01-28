@@ -1,4 +1,4 @@
-package com.example.piano.ui.auth.screens
+package com.example.piano.ui.auth.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,9 +25,9 @@ import com.example.piano.ui.theme.PianoBlue40
 import com.example.piano.ui.theme.PianoBlueGrey40
 
 @Composable
-fun ForgotPasswordPage(
+fun RegisterPage(
     navigationActions: NavigationActions,
-    onForgotPasswordClick: (String, String, String) -> Unit = { _, _, _ -> }
+    onRegisterClick: (String, String, String) -> Unit = { _, _, _ -> }
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -63,7 +63,7 @@ fun ForgotPasswordPage(
             Text(
                 text = "错音下线！",
                 fontSize = 20.sp,
-                color = PianoBlueGrey40,
+                color = PianoBlue40,
                 textAlign = TextAlign.Center
             )
             
@@ -96,16 +96,16 @@ fun ForgotPasswordPage(
             
             Spacer(modifier = Modifier.height(20.dp))
             
-            // 新密码输入框
+            // 密码输入框
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("新密码") },
-                placeholder = { Text("请输入新密码") },
+                label = { Text("密码") },
+                placeholder = { Text("请输入密码") },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Lock,
-                        contentDescription = "新密码",
+                        contentDescription = "密码",
                         tint = PianoBlue40
                     )
                 },
@@ -142,7 +142,7 @@ fun ForgotPasswordPage(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
                 label = { Text("确认密码") },
-                placeholder = { Text("请再次输入新密码") },
+                placeholder = { Text("请再次输入密码") },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Lock,
@@ -191,9 +191,9 @@ fun ForgotPasswordPage(
             
             Spacer(modifier = Modifier.height(32.dp))
             
-            // 重置密码按钮
+            // 注册按钮
             Button(
-                onClick = { onForgotPasswordClick(username, password, confirmPassword) },
+                onClick = { onRegisterClick(username, password, confirmPassword) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -208,7 +208,7 @@ fun ForgotPasswordPage(
                          password == confirmPassword
             ) {
                 Text(
-                    text = "重置密码",
+                    text = "注册",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -223,7 +223,7 @@ fun ForgotPasswordPage(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "想起密码了？",
+                    text = "已有账号？",
                     fontSize = 14.sp,
                     color = Color(0xFF757575)
                 )
@@ -232,7 +232,7 @@ fun ForgotPasswordPage(
                     onClick = { navigationActions.navigateUp() }
                 ) {
                     Text(
-                        text = "返回登录",
+                        text = "立即登录",
                         fontSize = 14.sp,
                         color = PianoBlue40,
                         fontWeight = FontWeight.Medium

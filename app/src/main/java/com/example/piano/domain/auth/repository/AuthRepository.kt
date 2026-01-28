@@ -1,7 +1,7 @@
 package com.example.piano.domain.auth.repository
 
 import com.example.piano.core.network.util.ResponseState
-import com.example.piano.domain.auth.api.response.LoginResponse
+import com.example.piano.data.auth.api.response.LoginResponse
 
 /**
  * 认证 Repository 接口

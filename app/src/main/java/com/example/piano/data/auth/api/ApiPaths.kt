@@ -1,4 +1,4 @@
-package com.example.piano.domain.auth.api
+package com.example.piano.data.auth.api
 
 /**
  * API 路径常量

@@ -21,10 +21,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.pianotutor.ui.screens.HomePage
-import com.example.pianotutor.ui.screens.PracticePage
-import com.example.pianotutor.ui.screens.ProfilePage
-import com.example.pianotutor.ui.screens.ProgressPage
+import com.example.piano.ui.home.screen.HomePage
+import com.example.piano.ui.practice.screen.PracticePage
+import com.example.piano.ui.profile.screen.ProfilePage
+import com.example.piano.ui.progress.screen.ProgressPage
 
 /**
  * 功能级导航 (MainNavHost)

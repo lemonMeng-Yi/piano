@@ -1,10 +1,10 @@
-package com.example.piano.domain.auth.api
+package com.example.piano.data.auth.api
 
 import com.example.piano.core.network.model.BaseResult
-import com.example.piano.domain.auth.api.request.ForgotPasswordRequest
-import com.example.piano.domain.auth.api.request.LoginRequest
-import com.example.piano.domain.auth.api.request.RegisterRequest
-import com.example.piano.domain.auth.api.response.LoginResponse
+import com.example.piano.data.auth.api.request.ForgotPasswordRequest
+import com.example.piano.data.auth.api.request.LoginRequest
+import com.example.piano.data.auth.api.request.RegisterRequest
+import com.example.piano.data.auth.api.response.LoginResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST

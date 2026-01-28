@@ -1,4 +1,4 @@
-package com.example.piano.domain.auth.api.response
+package com.example.piano.data.auth.api.response
 
 /**
  * 登录响应

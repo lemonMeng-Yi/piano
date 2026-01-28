@@ -1,4 +1,4 @@
-package com.example.piano.ui.auth.screens
+package com.example.piano.ui.auth.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,15 +25,13 @@ import com.example.piano.ui.theme.PianoBlue40
 import com.example.piano.ui.theme.PianoBlueGrey40
 
 @Composable
-fun RegisterPage(
+fun LoginPage(
     navigationActions: NavigationActions,
-    onRegisterClick: (String, String, String) -> Unit = { _, _, _ -> }
+    onLoginClick: (String, String) -> Unit = { _, _ -> }
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -46,7 +44,7 @@ fun RegisterPage(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Logo区域
+            // Logo区域 - 使用应用图标
             Spacer(modifier = Modifier.height(20.dp))
             
             // 标题
@@ -63,11 +61,11 @@ fun RegisterPage(
             Text(
                 text = "错音下线！",
                 fontSize = 20.sp,
-                color = PianoBlue40,
+                color = PianoBlueGrey40,
                 textAlign = TextAlign.Center
             )
             
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(60.dp))
             
             // 用户名输入框
             OutlinedTextField(
@@ -135,65 +133,11 @@ fun RegisterPage(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
             
-            Spacer(modifier = Modifier.height(20.dp))
-            
-            // 确认密码输入框
-            OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                label = { Text("确认密码") },
-                placeholder = { Text("请再次输入密码") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = "确认密码",
-                        tint = PianoBlue40
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PianoBlue40,
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedLabelColor = PianoBlue40,
-                    unfocusedLabelColor = Color(0xFF757575)
-                ),
-                visualTransformation = if (confirmPasswordVisible) {
-                    VisualTransformation.None
-                } else {
-                    PasswordVisualTransformation()
-                },
-                trailingIcon = {
-                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                        Icon(
-                            imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (confirmPasswordVisible) "隐藏密码" else "显示密码",
-                            tint = PianoBlue40
-                        )
-                    }
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                isError = confirmPassword.isNotBlank() && password != confirmPassword
-            )
-            
-            // 密码不一致提示
-            if (confirmPassword.isNotBlank() && password != confirmPassword) {
-                Text(
-                    text = "两次输入的密码不一致",
-                    color = MaterialTheme.colorScheme.error,
-                    fontSize = 12.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, top = 4.dp)
-                )
-            }
-            
             Spacer(modifier = Modifier.height(32.dp))
             
-            // 注册按钮
+            // 登录按钮
             Button(
-                onClick = { onRegisterClick(username, password, confirmPassword) },
+                onClick = { onLoginClick(username, password) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -202,13 +146,10 @@ fun RegisterPage(
                     containerColor = PianoBlue40,
                     contentColor = Color.White
                 ),
-                enabled = username.isNotBlank() && 
-                         password.isNotBlank() && 
-                         confirmPassword.isNotBlank() &&
-                         password == confirmPassword
+                enabled = username.isNotBlank() && password.isNotBlank()
             ) {
                 Text(
-                    text = "注册",
+                    text = "登录",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -216,23 +157,29 @@ fun RegisterPage(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // 返回登录入口
+            // 忘记密码和注册入口
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "已有账号？",
-                    fontSize = 14.sp,
-                    color = Color(0xFF757575)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
+                // 忘记密码链接
                 TextButton(
-                    onClick = { navigationActions.navigateUp() }
+                    onClick = { navigationActions.navigateToForgotPassword() }
                 ) {
                     Text(
-                        text = "立即登录",
+                        text = "忘记密码？",
+                        fontSize = 14.sp,
+                        color = PianoBlue40
+                    )
+                }
+                
+                // 注册入口
+                TextButton(
+                    onClick = { navigationActions.navigateToRegister() }
+                ) {
+                    Text(
+                        text = "注册账号",
                         fontSize = 14.sp,
                         color = PianoBlue40,
                         fontWeight = FontWeight.Medium
