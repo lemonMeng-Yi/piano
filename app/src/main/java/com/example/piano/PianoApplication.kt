@@ -2,6 +2,8 @@ package com.example.piano
 
 import android.app.Application
 import com.blankj.utilcode.util.Utils
+import com.example.piano.core.manager.TokenManager
+import com.example.piano.core.storage.DataStoreManager
 import dagger.hilt.android.HiltAndroidApp
 
 /**
@@ -10,12 +12,14 @@ import dagger.hilt.android.HiltAndroidApp
  */
 @HiltAndroidApp
 class PianoApplication : Application() {
-    
+
     override fun onCreate() {
         super.onCreate()
-        
-        // 初始化 utilcodex 工具库
-        // 如果注释掉，SPUtils 会在首次使用时自动初始化，但可能在某些场景下出现问题
+
         Utils.init(this)
+
+        // DataStore 版 TokenManager 需在 Application 中初始化
+        TokenManager.init(DataStoreManager.getInstance(this))
     }
 }
+

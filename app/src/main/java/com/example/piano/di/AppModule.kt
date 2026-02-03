@@ -1,6 +1,8 @@
 package com.example.piano.di
 
+import android.content.Context
 import com.example.piano.core.network.NetworkClient
+import com.example.piano.core.storage.DataStoreManager
 import com.example.piano.data.auth.api.AuthApi
 import com.example.piano.data.auth.repository.AuthRepositoryImpl
 import com.example.piano.domain.auth.repository.AuthRepository
@@ -8,6 +10,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -23,6 +26,12 @@ abstract class AppModule {
      * 提供 AuthApi 实例
      */
     companion object {
+        @Provides
+        @Singleton
+        fun provideDataStoreManager(@ApplicationContext context: Context): DataStoreManager {
+            return DataStoreManager.getInstance(context)
+        }
+
         @Provides
         @Singleton
         fun provideAuthApi(): AuthApi {

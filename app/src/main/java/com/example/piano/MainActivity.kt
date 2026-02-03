@@ -18,9 +18,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
-import com.example.piano.core.util.LocalThemeManager
-import com.example.piano.core.util.ThemeManager
-import com.example.piano.core.network.util.TokenManager
+import com.example.piano.core.manager.LocalThemeManager
+import com.example.piano.core.manager.ThemeManager
+import com.example.piano.core.manager.TokenManager
 import com.example.piano.navigation.AuthNavHost
 import com.example.piano.navigation.MainNavHost
 import com.example.piano.ui.components.AppSnackBarHost

@@ -12,7 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.piano.core.util.LocalThemeManager
+import com.example.piano.core.manager.LocalThemeManager
 import com.example.piano.ui.theme.AppTheme
 import com.example.piano.ui.theme.PianoDarkColor
 import com.example.piano.ui.theme.PianoLightColor

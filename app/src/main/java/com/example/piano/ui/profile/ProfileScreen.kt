@@ -20,8 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.piano.core.util.LocalThemeManager
-import com.example.piano.core.util.ThemeManager
+import com.example.piano.core.manager.LocalThemeManager
+import com.example.piano.core.manager.ThemeManager
 import com.example.piano.ui.auth.viewmodel.AuthViewModel
 import com.example.piano.ui.components.SnackBarManager
 import com.example.piano.ui.theme.AppTheme

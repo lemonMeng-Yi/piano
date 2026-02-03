@@ -71,7 +71,10 @@ dependencies {
     
     // 工具库
     implementation libs.utilcodex
-    
+
+    // DataStore 偏好存储
+    implementation libs.androidx.datastore.preferences
+
     // Hilt 依赖注入
     implementation libs.hilt.android
     kapt libs.hilt.compiler

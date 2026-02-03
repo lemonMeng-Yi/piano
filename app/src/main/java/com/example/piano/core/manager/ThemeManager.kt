@@ -1,10 +1,10 @@
-package com.example.piano.core.util
+package com.example.piano.core.manager
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.blankj.utilcode.util.SPUtils
+import com.example.piano.core.storage.DataStoreManager
 import com.example.piano.ui.theme.AppTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,6 +12,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,23 +28,20 @@ private const val APP_THEME_KEY = "app_theme"
 
 /**
  * 主题管理器
- * 管理应用的深色模式状态，并持久化到本地
+ * 管理应用的深色模式状态，使用 DataStore 持久化。
  */
 @Singleton
-class ThemeManager @Inject constructor() {
+class ThemeManager @Inject constructor(
+    private val dataStoreManager: DataStoreManager,
+) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val spUtils = SPUtils.getInstance("theme_prefs")
-    
-    // 主题默认设置为跟随系统
+
     private val _currentTheme = MutableStateFlow(AppTheme.System)
     val currentTheme: StateFlow<AppTheme> = _currentTheme.asStateFlow()
-    
-    /**
-     * 加载保存的主题
-     */
+
     suspend fun loadSavedTheme() {
         try {
-            val savedThemeName = spUtils.getString(APP_THEME_KEY, AppTheme.System.name)
+            val savedThemeName = dataStoreManager.getString(APP_THEME_KEY, AppTheme.System.name).first()
             if (savedThemeName.isNotEmpty()) {
                 val theme = try {
                     AppTheme.valueOf(savedThemeName)
@@ -54,13 +52,9 @@ class ThemeManager @Inject constructor() {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            // 失败则保持默认 System
         }
     }
-    
-    /**
-     * 切换主题
-     */
+
     fun toggleTheme(currentTheme: AppTheme) {
         val newTheme = when (currentTheme) {
             AppTheme.Light -> AppTheme.Dark
@@ -69,18 +63,12 @@ class ThemeManager @Inject constructor() {
         }
         setTheme(newTheme)
     }
-    
-    /**
-     * 设置主题
-     */
+
     fun setTheme(theme: AppTheme) {
         _currentTheme.value = theme
         persistAsync(theme)
     }
-    
-    /**
-     * 获取实际应用的主题，考虑系统主题
-     */
+
     @Composable
     fun getActualTheme(): AppTheme {
         return when (_currentTheme.collectAsState().value) {
@@ -88,14 +76,11 @@ class ThemeManager @Inject constructor() {
             else -> _currentTheme.collectAsState().value
         }
     }
-    
-    /**
-     * 异步持久化主题
-     */
+
     private fun persistAsync(theme: AppTheme) {
         scope.launch {
             try {
-                spUtils.put(APP_THEME_KEY, theme.name)
+                dataStoreManager.setString(APP_THEME_KEY, theme.name)
             } catch (e: Exception) {
                 e.printStackTrace()
             }

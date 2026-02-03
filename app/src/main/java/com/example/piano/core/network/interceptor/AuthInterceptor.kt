@@ -1,6 +1,6 @@
 package com.example.piano.core.network.interceptor
 
-import com.example.piano.core.network.util.TokenManager
+import com.example.piano.core.manager.TokenManager
 import okhttp3.Interceptor
 import okhttp3.Response
 

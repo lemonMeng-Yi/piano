@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.blankj.utilcode.util.LogUtils
 import com.example.piano.core.network.util.ResponseState
-import com.example.piano.core.network.util.TokenManager
+import com.example.piano.core.manager.TokenManager
 import com.example.piano.domain.auth.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
