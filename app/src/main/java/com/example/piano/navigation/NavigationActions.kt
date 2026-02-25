@@ -59,6 +59,13 @@ class NavigationActions(private val navController: NavController) {
     fun navigateToPractice() {
         navController.navigate(NavRoutes.PRACTICE)
     }
+
+    /**
+     * 导航到跟弹纠错页面
+     */
+    fun navigateToPracticeFollowAlong() {
+        navController.navigate(NavRoutes.PRACTICE_FOLLOW_ALONG)
+    }
     
     /**
      * 导航到进度页面

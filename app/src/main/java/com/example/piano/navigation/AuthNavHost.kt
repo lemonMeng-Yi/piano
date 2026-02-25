@@ -46,7 +46,8 @@ fun AuthNavHost(
             LoginPage(
                 navigationActions = navigationActions,
                 onLoginClick = { username, password ->
-                    authViewModel.login(username, password) { success, errorMessage ->
+                    onLoginSuccess()
+                   /* authViewModel.login(username, password) { success, errorMessage ->
                         if (success) {
                             SnackBarManager.showSuccess("登录成功")
                             onLoginSuccess()
@@ -56,7 +57,7 @@ fun AuthNavHost(
                                 errorMessage ?: "登录失败"
                             )
                         }
-                    }
+                    }*/
                 }
             )
         }

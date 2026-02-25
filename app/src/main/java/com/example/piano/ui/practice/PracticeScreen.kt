@@ -16,12 +16,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.piano.navigation.NavigationActions
 import com.example.piano.ui.theme.PianoTheme
+import androidx.navigation.NavHostController
 
 @Composable
-fun PracticePage() {
+fun PracticePage(navController: NavHostController) {
     var isPlaying by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0.45f) }
+    val navActions = remember(navController) { NavigationActions(navController) }
 
     Column(
         modifier = Modifier
@@ -40,8 +43,52 @@ fun PracticePage() {
             text = "实时分析你的演奏，提供即时反馈",
             style = MaterialTheme.typography.bodyMedium,
             color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 24.dp)
+            modifier = Modifier.padding(bottom = 16.dp)
         )
+
+        // 跟弹纠错入口
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = PianoTheme.colors.secondaryContainer.copy(alpha = 0.5f)
+            ),
+            onClick = { navActions.navigateToPracticeFollowAlong() }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = PianoTheme.colors.primary,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "智能纠错 · 跟弹练习",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "按顺序点击琴键，实时纠错并查看正确率",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
+                Icon(
+                    Icons.Default.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = PianoTheme.colors.onSurface.copy(alpha = 0.5f)
+                )
+            }
+        }
 
         // Current Piece Card
         Card(

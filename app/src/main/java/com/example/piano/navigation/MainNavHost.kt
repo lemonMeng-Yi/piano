@@ -22,6 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.piano.ui.home.screen.HomePage
+import com.example.piano.ui.practice.FollowAlongScreen
 import com.example.piano.ui.practice.PracticePage
 import com.example.piano.ui.profile.ProfilePage
 import com.example.piano.ui.progress.ProgressPage
@@ -60,6 +61,7 @@ fun MainNavHost(
     
     Scaffold(
         bottomBar = {
+            if (currentRoute != NavRoutes.PRACTICE_FOLLOW_ALONG) {
             NavigationBar(
                 containerColor = PianoTheme.colors.surface
             ) {
@@ -88,6 +90,7 @@ fun MainNavHost(
                     onClick = { navigationActions.navigateToProfile() }
                 )
             }
+            }
         },
         modifier = modifier
     ) { paddingValues ->
@@ -101,9 +104,11 @@ fun MainNavHost(
                 }
                 
                 composable(NavRoutes.PRACTICE) {
-                    PracticePage()
+                    PracticePage(navController = navController)
                 }
-                
+                composable(NavRoutes.PRACTICE_FOLLOW_ALONG) {
+                    FollowAlongScreen(onBack = { navController.popBackStack() })
+                }
                 composable(NavRoutes.PROGRESS) {
                     ProgressPage()
                 }

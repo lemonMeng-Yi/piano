@@ -16,6 +16,7 @@ object NavRoutes {
     // ========== 主功能路由 ==========
     const val HOME = "home"
     const val PRACTICE = "practice"
+    const val PRACTICE_FOLLOW_ALONG = "practice_follow_along"
     const val PROGRESS = "progress"
     const val PROFILE = "profile"
 }
