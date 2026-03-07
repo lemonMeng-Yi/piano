@@ -7,7 +7,7 @@ object NetworkConfig {
     /**
      * API 基础 URL
      */
-    const val BASE_URL = "http://10.0.30.5:8080/"
+    const val BASE_URL = "http://192.168.13.101:8080/"
     
     /**
      * 连接超时时间（秒）

@@ -1,5 +1,9 @@
 package com.example.piano.ui.practice
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,16 +19,40 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.piano.core.audio.PitchResult
 import com.example.piano.navigation.NavigationActions
 import com.example.piano.ui.theme.PianoTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.core.content.ContextCompat
 
 @Composable
 fun PracticePage(navController: NavHostController) {
     var isPlaying by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0.45f) }
     val navActions = remember(navController) { NavigationActions(navController) }
+    val viewModel: PracticeViewModel = viewModel()
+    val currentPitch by viewModel.currentPitch.collectAsState()
+    val isRecording by viewModel.isRecording.collectAsState()
+    val permissionDenied by viewModel.permissionDenied.collectAsState()
+    val context = LocalContext.current
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) viewModel.startPitchCapture()
+        else { viewModel.onPermissionDenied(); viewModel.stopPitchCapture() }
+    }
+
+    fun onStartPitchCaptureClick() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            viewModel.startPitchCapture()
+        } else {
+            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -87,6 +115,112 @@ fun PracticePage(navController: NavHostController) {
                     contentDescription = null,
                     tint = PianoTheme.colors.onSurface.copy(alpha = 0.5f)
                 )
+            }
+        }
+
+        // 实时音高 · 音频采集 + 显示
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = PianoTheme.colors.secondaryContainer.copy(alpha = 0.5f)
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Mic,
+                        contentDescription = null,
+                        tint = PianoTheme.colors.primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "实时音高",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "采集麦克风声音并显示检测到的音高（钢琴、人声等）",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(PianoTheme.colors.surfaceVariant)
+                        .padding(16.dp)
+                ) {
+                    when (val result = currentPitch) {
+                        is PitchResult.Pitch -> {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = result.note.displayName(),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PianoTheme.colors.primary
+                                )
+                                Text(
+                                    text = String.format("%.1f Hz", result.frequencyHz),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+                        }
+                        is PitchResult.Listening -> {
+                            Text(
+                                text = "正在监听… 请对着麦克风演奏或发声",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = PianoTheme.colors.onSurface.copy(alpha = 0.7f)
+                            )
+                        }
+                        null -> {
+                            Text(
+                                text = if (isRecording) "正在启动…" else "点击下方按钮开始采集",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+                if (permissionDenied) {
+                    Text(
+                        text = "需要麦克风权限才能采集音频",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PianoTheme.colors.error,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = {
+                        if (isRecording) viewModel.stopPitchCapture()
+                        else onStartPitchCaptureClick()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (isRecording) "停止采集" else "开始采集")
+                }
             }
         }
 
