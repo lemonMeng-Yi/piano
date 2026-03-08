@@ -66,18 +66,33 @@ class NavigationActions(private val navController: NavController) {
     fun navigateToPracticeFollowAlong() {
         navController.navigate(NavRoutes.PRACTICE_FOLLOW_ALONG)
     }
-    
+
     /**
-     * 导航到进度页面
+     * 导航到课程页面
      */
-    fun navigateToProgress() {
-        navController.navigate(NavRoutes.PROGRESS)
+    fun navigateToCourses() {
+        navController.navigate(NavRoutes.COURSES)
     }
-    
+
     /**
      * 导航到个人资料页面
      */
     fun navigateToProfile() {
         navController.navigate(NavRoutes.PROFILE)
+    }
+
+    /**
+     * 导航到课程视频全屏播放页
+     */
+    fun navigateToCourseVideo(videoUrl: String) {
+        val encoded = android.net.Uri.encode(videoUrl)
+        navController.navigate("${NavRoutes.COURSE_VIDEO}/$encoded")
+    }
+
+    /**
+     * 导航到课程详情页（子课时列表）
+     */
+    fun navigateToCourseDetail(courseId: String) {
+        navController.navigate("${NavRoutes.COURSE_DETAIL}/$courseId")
     }
 }

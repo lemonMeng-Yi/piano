@@ -57,23 +57,21 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.piano.core.audio.PitchResult
+import com.example.piano.domain.practice.CoursePieces
 import com.example.piano.domain.practice.CorrectionRecord
 import com.example.piano.domain.practice.Note
 import com.example.piano.domain.practice.PracticePiece
 import com.example.piano.ui.theme.PianoTheme
 import kotlinx.coroutines.delay
 
-/** 默认练习曲：C 大调音阶上下行 */
-private val DEFAULT_PIECE = PracticePiece(
-    id = "scale_c",
-    title = "C 大调音阶",
-    notes = listOf(60, 62, 64, 65, 67, 69, 71, 72, 71, 69, 67, 65, 64, 62, 60).map { Note(it) }
-)
-
 /** 跟弹页入口：先显示加载页，等渲染稳定后再显示跟弹内容。
- * 入口内统一隐藏系统栏，使加载页与跟弹页显示范围一致（无状态栏、无底部栏）。 */
+ * @param pieceId 课程曲目 id，见 [CoursePieces]，null 则用默认 C 大调音阶 */
 @Composable
-fun FollowAlongEntry(onBack: () -> Unit) {
+fun FollowAlongEntry(
+    pieceId: String?,
+    onBack: () -> Unit
+) {
+    val piece = remember(pieceId) { CoursePieces.getPiece(pieceId) }
     val context = LocalContext.current
     val activity = context as? Activity
     var ready by remember { mutableStateOf(false) }
@@ -95,7 +93,7 @@ fun FollowAlongEntry(onBack: () -> Unit) {
     }
 
     if (ready) {
-        FollowAlongScreen(onBack = onBack)
+        FollowAlongScreen(piece = piece, onBack = onBack)
     } else {
         FollowAlongLoadingScreen()
     }
@@ -104,9 +102,9 @@ fun FollowAlongEntry(onBack: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FollowAlongScreen(
+    piece: PracticePiece,
     onBack: () -> Unit
 ) {
-    val piece = DEFAULT_PIECE
     var currentIndex by remember { mutableStateOf(0) }
     val records = remember { mutableStateListOf<CorrectionRecord>() }
     /** 仅在此处设为非 null：点击错键 或 麦克风判定为错音。弹对或 400ms 后清除。红键只跟这个走。 */

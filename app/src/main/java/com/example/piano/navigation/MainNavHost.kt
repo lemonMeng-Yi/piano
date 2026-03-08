@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
@@ -21,18 +21,24 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.piano.ui.home.screen.HomePage
+import com.example.piano.ui.courses.CourseDetailPage
+import com.example.piano.ui.courses.CourseVideoScreen
+import com.example.piano.ui.courses.CourseVideoViewModel
+import com.example.piano.ui.courses.CoursesPage
 import com.example.piano.ui.practice.FollowAlongEntry
 import com.example.piano.ui.practice.PracticePage
 import com.example.piano.ui.profile.ProfilePage
-import com.example.piano.ui.progress.ProgressPage
 
 /**
  * 功能级导航 (MainNavHost)
  *
  * 职责：
  * 1. 主要功能页面管理
- *    - 底部导航栏页面（首页、练习、进度、个人资料）
+ *    - 底部导航栏页面（首页、练习、课程、个人资料）
  *    - 这些页面共享同一个底部导航栏，形成主要的用户交互区域
  *
  * 2. 功能级页面跳转
@@ -61,7 +67,7 @@ fun MainNavHost(
 
     Scaffold(
         bottomBar = {
-            if (currentRoute != NavRoutes.PRACTICE_FOLLOW_ALONG) {
+            if (currentRoute != NavRoutes.PRACTICE_FOLLOW_ALONG && !currentRoute.orEmpty().startsWith("${NavRoutes.COURSE_VIDEO}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.COURSE_DETAIL}/")) {
             NavigationBar(
                 containerColor = PianoTheme.colors.surface
             ) {
@@ -78,10 +84,10 @@ fun MainNavHost(
                     onClick = { navigationActions.navigateToPractice() }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.BarChart, contentDescription = "进度") },
-                    label = { Text("进度") },
-                    selected = currentRoute == NavRoutes.PROGRESS,
-                    onClick = { navigationActions.navigateToProgress() }
+                    icon = { Icon(Icons.Default.MenuBook, contentDescription = "课程") },
+                    label = { Text("课程") },
+                    selected = currentRoute == NavRoutes.COURSES,
+                    onClick = { navigationActions.navigateToCourses() }
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Person, contentDescription = "我的") },
@@ -107,12 +113,32 @@ fun MainNavHost(
                     PracticePage(navController = navController)
                 }
                 composable(NavRoutes.PRACTICE_FOLLOW_ALONG) {
-                    FollowAlongEntry(onBack = { navController.popBackStack() })
+                    FollowAlongEntry(pieceId = null, onBack = { navController.popBackStack() })
                 }
-                composable(NavRoutes.PROGRESS) {
-                    ProgressPage()
+                composable(NavRoutes.COURSES) {
+                    CoursesPage(
+                        onPlayVideo = { navigationActions.navigateToCourseVideo(it) },
+                        onOpenCourseDetail = { navigationActions.navigateToCourseDetail(it) }
+                    )
                 }
-                
+                composable(
+                    route = "${NavRoutes.COURSE_DETAIL}/{courseId}",
+                    arguments = listOf(navArgument("courseId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val courseId = backStackEntry.arguments?.getString("courseId") ?: return@composable
+                    CourseDetailPage(
+                        courseId = courseId,
+                        onBack = { navController.popBackStack() },
+                        onPlayVideo = { navigationActions.navigateToCourseVideo(it) }
+                    )
+                }
+                composable(
+                    route = "${NavRoutes.COURSE_VIDEO}/{videoUrl}",
+                    arguments = listOf(navArgument("videoUrl") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val viewModel: CourseVideoViewModel = hiltViewModel(backStackEntry)
+                    CourseVideoScreen(viewModel = viewModel, onBack = { navController.popBackStack() })
+                }
                 composable(NavRoutes.PROFILE) {
                     ProfilePage(onLogout = onLogout)
                 }
