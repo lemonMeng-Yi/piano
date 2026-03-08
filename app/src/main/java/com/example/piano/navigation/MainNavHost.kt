@@ -125,9 +125,7 @@ fun MainNavHost(
                     route = "${NavRoutes.COURSE_DETAIL}/{courseId}",
                     arguments = listOf(navArgument("courseId") { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val courseId = backStackEntry.arguments?.getString("courseId") ?: return@composable
                     CourseDetailPage(
-                        courseId = courseId,
                         onBack = { navController.popBackStack() },
                         onPlayVideo = { navigationActions.navigateToCourseVideo(it) }
                     )

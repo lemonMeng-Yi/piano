@@ -5,7 +5,10 @@ import com.example.piano.core.network.NetworkClient
 import com.example.piano.core.storage.DataStoreManager
 import com.example.piano.data.auth.api.AuthApi
 import com.example.piano.data.auth.repository.AuthRepositoryImpl
+import com.example.piano.data.course.api.CourseApi
+import com.example.piano.data.course.repository.CourseRepositoryImpl
 import com.example.piano.domain.auth.repository.AuthRepository
+import com.example.piano.domain.course.repository.CourseRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -37,6 +40,12 @@ abstract class AppModule {
         fun provideAuthApi(): AuthApi {
             return NetworkClient.createService(AuthApi::class.java)
         }
+
+        @Provides
+        @Singleton
+        fun provideCourseApi(): CourseApi {
+            return NetworkClient.createService(CourseApi::class.java)
+        }
     }
     
     /**
@@ -51,4 +60,10 @@ abstract class AppModule {
     abstract fun bindAuthRepository(
         authRepositoryImpl: AuthRepositoryImpl
     ): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCourseRepository(
+        courseRepositoryImpl: CourseRepositoryImpl
+    ): CourseRepository
 }

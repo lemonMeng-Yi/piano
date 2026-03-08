@@ -5,12 +5,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.piano.ui.theme.PianoTheme
 
 /** 课程 Tab：学钢琴 / 曲谱 */
@@ -27,35 +30,27 @@ private enum class CourseTab { LEARN_PIANO, MUSIC_LIBRARY }
 
 private val TAB_TITLES = listOf("学钢琴", "曲谱库")
 
-/** 单门课程数据（学钢琴用） */
-private data class CourseItem(
-    val title: String,
-    val bullets: List<String>,
-    val statusText: String,
-    val inProgress: Boolean,
-    val cardColor: Color,
-    val accentColor: Color,
-    val contentColor: Color,
-    val videoUrl: String? = null,
-    /** 有子课时的课程：点击「开始学习」进入详情页；需配合 courseId 使用 */
-    val subItems: List<SubLesson>? = null,
-    val courseId: String? = null
+/** 卡片配色（按大模块顺序循环使用）；contentColor 统一为白色，保证字体一致 */
+private val CARD_COLORS = listOf(
+    Triple(Color(0xFFFF9800), Color.White, Color.White),
+    Triple(Color(0xFF7B1FA2), Color.White, Color.White),
+    Triple(Color(0xFF1976D2), Color.White, Color.White),
+    Triple(Color(0xFF388E3C), Color.White, Color.White)
 )
 
-/** 子课时：标题 + 视频地址 */
-private data class SubLesson(val title: String, val videoUrl: String?)
-
-/** 曲库条目 */
-private data class SongItem(
+/** 曲谱库条目（参考钢琴谱库列表样式） */
+private data class SheetMusicItem(
     val title: String,
-    val artist: String,
-    val level: String
+    val tags: List<String>,
+    val authorName: String,
+    val likeCount: String
 )
 
 @Composable
 fun CoursesPage(
     onPlayVideo: (String) -> Unit = {},
-    onOpenCourseDetail: (String) -> Unit = {}
+    onOpenCourseDetail: (String) -> Unit = {},
+    viewModel: CoursesViewModel = hiltViewModel()
 ) {
     var selectedTab by remember { mutableStateOf(CourseTab.LEARN_PIANO) }
 
@@ -102,7 +97,11 @@ fun CoursesPage(
 
         // 内容区：点击 Tab 切换
         when (selectedTab) {
-            CourseTab.LEARN_PIANO -> LearnPianoContent(onPlayVideo = onPlayVideo, onOpenCourseDetail = onOpenCourseDetail)
+            CourseTab.LEARN_PIANO -> LearnPianoContent(
+                viewModel = viewModel,
+                onPlayVideo = onPlayVideo,
+                onOpenCourseDetail = onOpenCourseDetail
+            )
             CourseTab.MUSIC_LIBRARY -> MusicLibraryContent()
         }
     }
@@ -110,95 +109,62 @@ fun CoursesPage(
 
 @Composable
 private fun LearnPianoContent(
+    viewModel: CoursesViewModel,
     onPlayVideo: (String) -> Unit,
     onOpenCourseDetail: (String) -> Unit
 ) {
-    val courses = remember {
-        listOf(
-            CourseItem(
-                title = "认识钢琴和乐谱",
-                bullets = listOf(
-                    "认识钢琴",
-                    "感受do、re、mi",
-                    "认识乐谱"
-                ),
-                statusText = "进行中 0/8",
-                inProgress = true,
-                cardColor = Color(0xFFE91E8C).copy(alpha = 0.85f),
-                accentColor = Color(0xFFFFC107),
-                contentColor = Color.Black,
-                videoUrl = "https://piano-course.oss-cn-beijing.aliyuncs.com/course/54eadcdcf136dd33b0fdbf0afbd24061.mp4",
-                subItems = listOf(
-                    SubLesson("认识钢琴", "https://piano-course.oss-cn-beijing.aliyuncs.com/course/54eadcdcf136dd33b0fdbf0afbd24061.mp4"),
-                    SubLesson("感受do、re、mi", "https://piano-course.oss-cn-beijing.aliyuncs.com/course/54eadcdcf136dd33b0fdbf0afbd24061.mp4"),
-                    SubLesson("认识乐谱", "https://piano-course.oss-cn-beijing.aliyuncs.com/course/54eadcdcf136dd33b0fdbf0afbd24061.mp4")
-                ),
-                courseId = "intro"
-            ),
-            CourseItem(
-                title = "节奏入门",
-                bullets = listOf(
-                    "认识四分、二分、全音符及附点二分音符",
-                    "认识左手低音 Do，并尝试双手合奏"
-                ),
-                statusText = "未开始",
-                inProgress = false,
-                cardColor = Color(0xFF7B1FA2),
-                accentColor = Color.White,
-                contentColor = Color.White
-            ),
-            CourseItem(
-                title = "右手五指训练",
-                bullets = listOf(
-                    "在 Do 音手位上进行五指训练",
-                    "认识同音连音线",
-                    "认识四分、二分、全休止符"
-                ),
-                statusText = "未开始",
-                inProgress = false,
-                cardColor = Color(0xFF1976D2),
-                accentColor = Color.White,
-                contentColor = Color.White
-            ),
-            CourseItem(
-                title = "双手演奏",
-                bullets = listOf(
-                    "学习 Re 音手位",
-                    "双手配合基础练习"
-                ),
-                statusText = "未开始",
-                inProgress = false,
-                cardColor = Color(0xFF388E3C),
-                accentColor = Color.White,
-                contentColor = Color.White
-            )
-        )
-    }
+    val uiState by viewModel.uiState.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
     ) {
-        Spacer(modifier = Modifier.height(20.dp))
-        courses.forEach { course ->
-            CourseCard(
-                title = course.title,
-                bullets = course.bullets,
-                statusText = course.statusText,
-                inProgress = course.inProgress,
-                cardColor = course.cardColor,
-                accentColor = course.accentColor,
-                contentColor = course.contentColor,
-                videoUrl = course.videoUrl,
-                courseId = course.courseId,
-                subItems = course.subItems,
-                onOpenDetail = onOpenCourseDetail,
-                onPlayVideo = onPlayVideo,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+        when (val state = uiState) {
+            is CoursesUiState.Loading -> {
+                Spacer(modifier = Modifier.height(20.dp))
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = PianoTheme.colors.primary)
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+            is CoursesUiState.Error -> {
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    text = state.message,
+                    color = PianoTheme.colors.error,
+                    modifier = Modifier.padding(16.dp)
+                )
+                TextButton(onClick = { viewModel.loadCategories() }) {
+                    Text("重试", color = PianoTheme.colors.primary)
+                }
+            }
+            is CoursesUiState.Success -> {
+                Spacer(modifier = Modifier.height(20.dp))
+                state.categories.forEachIndexed { index, category ->
+                    val (cardColor, accentColor, contentColor) = CARD_COLORS[index % CARD_COLORS.size]
+                    CourseCard(
+                        title = category.title,
+                        bullets = category.bullets,
+                        statusText = category.statusText,
+                        inProgress = category.inProgress,
+                        cardColor = cardColor,
+                        accentColor = accentColor,
+                        contentColor = contentColor,
+                        videoUrl = null,
+                        courseId = if (category.hasSubCourses) category.categoryId.toString() else null,
+                        onOpenDetail = onOpenCourseDetail,
+                        onPlayVideo = onPlayVideo,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
         }
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
@@ -213,7 +179,6 @@ private fun CourseCard(
     contentColor: Color,
     videoUrl: String? = null,
     courseId: String? = null,
-    subItems: List<SubLesson>? = null,
     onOpenDetail: (String) -> Unit = {},
     onPlayVideo: (String) -> Unit = {},
     modifier: Modifier = Modifier
@@ -277,7 +242,7 @@ private fun CourseCard(
             Spacer(modifier = Modifier.height(12.dp))
             Button(
                 onClick = {
-                    if (subItems != null && courseId != null) {
+                    if (courseId != null) {
                         onOpenDetail(courseId)
                     } else {
                         videoUrl?.let { url -> onPlayVideo(url) }
@@ -300,13 +265,38 @@ private fun CourseCard(
 
 @Composable
 private fun MusicLibraryContent() {
-    val songs = remember {
+    val items = remember {
         listOf(
-            SongItem("欢乐颂", "贝多芬", "入门"),
-            SongItem("致爱丽丝", "贝多芬", "初级"),
-            SongItem("小星星变奏曲", "莫扎特", "初级"),
-            SongItem("月光奏鸣曲", "贝多芬", "中级"),
-            SongItem("土耳其进行曲", "莫扎特", "中级")
+            SheetMusicItem(
+                title = "蒲公英的约定-副歌",
+                tags = listOf("副歌", "C大调", "可转简谱"),
+                authorName = "香味少女",
+                likeCount = "1.3w"
+            ),
+            SheetMusicItem(
+                title = "明明就 (C调)-周杰伦",
+                tags = listOf("C大调", "指法"),
+                authorName = "LazyMmm",
+                likeCount = "1.0w"
+            ),
+            SheetMusicItem(
+                title = "天空之城 (C调)",
+                tags = listOf("可转简谱", "指法"),
+                authorName = "Hinngula",
+                likeCount = "2149"
+            ),
+            SheetMusicItem(
+                title = "听妈妈的话 (C调简单版)-周杰伦",
+                tags = listOf("简单版", "C大调"),
+                authorName = "不知道叫什么",
+                likeCount = "4047"
+            ),
+            SheetMusicItem(
+                title = "婚礼进行曲",
+                tags = listOf("经典"),
+                authorName = "钢琴谱库",
+                likeCount = "454"
+            )
         )
     }
 
@@ -314,48 +304,120 @@ private fun MusicLibraryContent() {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
     ) {
-        Text(
-            text = "流行曲库",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = PianoTheme.colors.onSurface,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-        songs.forEach { song ->
-            Card(
+        Spacer(modifier = Modifier.height(16.dp))
+        items.forEach { item ->
+            SheetMusicListItem(
+                item = item,
+                onClick = { },
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun SheetMusicListItem(
+    item: SheetMusicItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = PianoTheme.colors.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 左侧：曲谱缩略图占位 + 播放按钮
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = PianoTheme.colors.surfaceVariant),
-                shape = RoundedCornerShape(12.dp)
+                    .size(width = 100.dp, height = 72.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(PianoTheme.colors.surfaceVariant),
+                contentAlignment = Alignment.Center
             ) {
-                Row(
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(PianoTheme.colors.primary.copy(alpha = 0.9f)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = song.title,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = song.artist,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = PianoTheme.colors.onSurface.copy(alpha = 0.7f)
-                        )
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = "播放",
+                        tint = PianoTheme.colors.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            // 右侧：标题、标签、作者、点赞数
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PianoTheme.colors.onSurface,
+                    maxLines = 2
+                )
+                if (item.tags.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        item.tags.take(4).forEach { tag ->
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = PianoTheme.colors.onSurface.copy(alpha = 0.08f)
+                            ) {
+                                Text(
+                                    text = tag,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = PianoTheme.colors.onSurface.copy(alpha = 0.75f),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
                     }
-                    AssistChip(
-                        onClick = { },
-                        label = { Text(song.level) },
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = PianoTheme.colors.primary.copy(alpha = 0.2f),
-                            labelColor = PianoTheme.colors.primary
-                        )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clip(CircleShape)
+                            .background(PianoTheme.colors.onSurface.copy(alpha = 0.15f))
+                    )
+                    Text(
+                        text = item.authorName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PianoTheme.colors.onSurface.copy(alpha = 0.65f)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Icon(
+                        Icons.Outlined.Star,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        text = item.likeCount,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
                     )
                 }
             }
