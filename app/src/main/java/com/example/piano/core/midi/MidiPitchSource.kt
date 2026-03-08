@@ -16,6 +16,7 @@ import kotlin.math.pow
 
 /**
  * 蓝牙/USB MIDI 输入：解析 Note On/Off，以与麦克风相同的 PitchResult 暴露给跟弹与实时音高。
+ * 同时维护当前按下的多音集合 currentNotes，供实时音高页多音解析显示。
  */
 class MidiPitchSource(
     private val midiManager: MidiManager,
@@ -25,6 +26,11 @@ class MidiPitchSource(
     private val _currentPitch = MutableStateFlow<PitchResult?>(null)
     val currentPitch: StateFlow<PitchResult?> = _currentPitch.asStateFlow()
 
+    /** 当前按下的所有键（多音），Note On 加入、Note Off 移除，供实时音高多音显示 */
+    private val _currentNotes = MutableStateFlow<Set<Note>>(emptySet())
+    val currentNotes: StateFlow<Set<Note>> = _currentNotes.asStateFlow()
+
+    private val heldNotes = mutableSetOf<Note>()
     private var device: MidiDevice? = null
     private val outputPorts = mutableListOf<android.media.midi.MidiOutputPort>()
     private val connectedReceivers = mutableListOf<MidiReceiver>()
@@ -48,11 +54,15 @@ class MidiPitchSource(
             device = openedDevice
             val onNote: (Int, Int, Boolean) -> Unit = { note, velocity, isOn ->
                 handler.post {
-                    _currentPitch.value = if (isOn && velocity > 0) {
-                        PitchResult.Pitch(Note(note), midiNoteToFreq(note))
+                    val noteObj = Note(note)
+                    if (isOn && velocity > 0) {
+                        heldNotes.add(noteObj)
+                        _currentPitch.value = PitchResult.Pitch(noteObj, midiNoteToFreq(note))
                     } else {
-                        PitchResult.Listening
+                        heldNotes.remove(noteObj)
+                        _currentPitch.value = if (heldNotes.isEmpty()) PitchResult.Listening else PitchResult.Pitch(heldNotes.maxByOrNull { it.midi }!!, midiNoteToFreq(heldNotes.maxByOrNull { it.midi }!!.midi))
                     }
+                    _currentNotes.value = heldNotes.toSet()
                 }
             }
             val portCount = openedDevice.info.outputPortCount
@@ -86,7 +96,9 @@ class MidiPitchSource(
             device?.close()
         } catch (_: Exception) { }
         device = null
+        heldNotes.clear()
         _currentPitch.value = null
+        _currentNotes.value = emptySet()
     }
 
     fun isConnected(): Boolean = device != null

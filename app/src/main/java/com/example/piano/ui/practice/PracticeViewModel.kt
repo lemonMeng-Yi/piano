@@ -21,6 +21,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.piano.core.audio.AudioPitchCapture
 import com.example.piano.core.audio.PitchResult
 import com.example.piano.core.midi.MidiPitchSource
+import com.example.piano.domain.practice.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,6 +80,11 @@ class PracticeViewModel @Inject constructor(
     ) { useMidi, connected, midiPitch, audioPitch ->
         if (useMidi && connected) midiPitch else audioPitch
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** 当前 MIDI 多音集合（仅在使用 MIDI 且已连接时有意义），供实时音高页多音解析显示 */
+    val currentMidiNotes: StateFlow<Set<Note>> = _midiPitchSourceHolder.flatMapLatest { source ->
+        source?.currentNotes ?: flowOf(emptySet())
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
 
     private val _isRecording = MutableStateFlow(false)
     val isRecording: StateFlow<Boolean> = combine(
