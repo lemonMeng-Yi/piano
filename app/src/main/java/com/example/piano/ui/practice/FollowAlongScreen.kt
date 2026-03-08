@@ -5,7 +5,6 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,9 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -27,11 +23,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -45,16 +43,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothAdapter
+import android.content.Intent
+import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.piano.core.audio.PitchResult
 import com.example.piano.domain.practice.CorrectionRecord
 import com.example.piano.domain.practice.Note
@@ -115,10 +116,16 @@ fun FollowAlongScreen(
     /** 本索引下已记录过的错音 MIDI（麦克风），避免同一错键重复记多条 */
     var lastRecordedWrongMidi by remember { mutableStateOf<Int?>(null) }
 
-    val viewModel: PracticeViewModel = viewModel()
+    val viewModel: PracticeViewModel = hiltViewModel()
     val currentPitch by viewModel.currentPitch.collectAsState()
     val isRecording by viewModel.isRecording.collectAsState()
     val permissionDenied by viewModel.permissionDenied.collectAsState()
+    val useMidiSource by viewModel.useMidiSource.collectAsState()
+    val midiConnected by viewModel.midiConnected.collectAsState()
+    val scannedBleMidiDevices by viewModel.scannedBleMidiDevices.collectAsState()
+    val isScanningBle by viewModel.isScanningBle.collectAsState()
+    val midiConnectionError by viewModel.midiConnectionError.collectAsState()
+    val isMidiSupported = viewModel.isMidiSupported
     val context = LocalContext.current
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -126,6 +133,53 @@ fun FollowAlongScreen(
     ) { granted ->
         if (granted) viewModel.startPitchCapture()
         else { viewModel.onPermissionDenied(); viewModel.stopPitchCapture() }
+    }
+
+    // 扫描蓝牙 MIDI 所需权限（BLUETOOTH_SCAN + 定位，用于发现设备）
+    val scanPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        if (grants.values.all { it }) viewModel.startBleMidiScan()
+    }
+
+    /** 请求扫描/连接权限后开始扫描（不检查蓝牙是否已开） */
+    fun doPermissionAndStartScan() {
+        val permissions = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.BLUETOOTH_SCAN)
+            }
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+            }
+        }
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+        if (permissions.isEmpty()) {
+            viewModel.startBleMidiScan()
+        } else {
+            scanPermissionLauncher.launch(permissions.toTypedArray())
+        }
+    }
+
+    // 请求打开蓝牙（未开时先弹出系统对话框，打开后再请求权限并扫描）
+    val bluetoothEnableLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            doPermissionAndStartScan()
+        }
+    }
+
+    /** 若蓝牙未开先请求打开，否则请求权限并开始扫描 */
+    fun ensureScanPermissionAndStartScan() {
+        if (!viewModel.isBluetoothEnabled()) {
+            val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            bluetoothEnableLauncher.launch(intent)
+            return
+        }
+        doPermissionAndStartScan()
     }
 
     fun startPlaying() {
@@ -258,6 +312,9 @@ fun FollowAlongScreen(
                     .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 if (!finished) {
+                    LaunchedEffect(useMidiSource) {
+                        if (useMidiSource) ensureScanPermissionAndStartScan()
+                    }
                     instructionCard(
                         piece = piece,
                         currentIndex = currentIndex,
@@ -266,6 +323,19 @@ fun FollowAlongScreen(
                         isRecording = isRecording,
                         currentPitch = currentPitch,
                         permissionDenied = permissionDenied,
+                        useMidiSource = useMidiSource,
+                        midiConnected = midiConnected,
+                        scannedBleMidiDevices = scannedBleMidiDevices,
+                        isScanningBle = isScanningBle,
+                        isBluetoothEnabled = viewModel.isBluetoothEnabled(),
+                        midiConnectionError = midiConnectionError,
+                        isMidiSupported = isMidiSupported,
+                        getBluetoothDeviceDisplayName = viewModel::getBluetoothDeviceDisplayName,
+                        onUseMidiSource = viewModel::setUseMidiSource,
+                        onScanBleMidi = ::ensureScanPermissionAndStartScan,
+                        onConnectBluetoothMidi = viewModel::connectBluetoothMidi,
+                        onDisconnectMidi = viewModel::disconnectMidi,
+                        onClearMidiError = viewModel::clearMidiError,
                         onStartPlaying = ::startPlaying,
                         onStopPlaying = { viewModel.stopPitchCapture() }
                     )
@@ -377,6 +447,19 @@ private fun instructionCard(
     isRecording: Boolean,
     currentPitch: PitchResult?,
     permissionDenied: Boolean,
+    useMidiSource: Boolean,
+    midiConnected: Boolean,
+    scannedBleMidiDevices: List<BluetoothDevice>,
+    isScanningBle: Boolean,
+    isBluetoothEnabled: Boolean,
+    midiConnectionError: String?,
+    isMidiSupported: Boolean,
+    getBluetoothDeviceDisplayName: (BluetoothDevice) -> String,
+    onUseMidiSource: (Boolean) -> Unit,
+    onScanBleMidi: () -> Unit,
+    onConnectBluetoothMidi: (BluetoothDevice) -> Unit,
+    onDisconnectMidi: () -> Unit,
+    onClearMidiError: () -> Unit,
     onStartPlaying: () -> Unit,
     onStopPlaying: () -> Unit
 ) {
@@ -391,57 +474,171 @@ private fun instructionCard(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "第 ${currentIndex + 1} / ${piece.notes.size} 个音 · 点击「开始弹奏」用钢琴弹，或直接点击琴键",
+                text = "第 ${currentIndex + 1} / ${piece.notes.size} 个音 · 选输入方式后弹奏或点击琴键",
                 style = MaterialTheme.typography.bodyMedium,
                 color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.padding(top = 4.dp)
             )
-            val next = piece.notes.getOrNull(currentIndex)
-            if (next != null) {
-                Text(
-                    text = "当前应为：${next.displayName()}",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = PianoTheme.colors.primary,
-                    modifier = Modifier.padding(top = 8.dp)
+            // 输入方式：麦克风 / 蓝牙 MIDI
+            Text(
+                text = "输入方式",
+                style = MaterialTheme.typography.labelMedium,
+                color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
+                modifier = Modifier.padding(top = 10.dp)
+            )
+            Row(modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                FilterChip(
+                    selected = !useMidiSource,
+                    onClick = { onUseMidiSource(false) },
+                    label = { Text("麦克风") }
+                )
+                Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+                FilterChip(
+                    selected = useMidiSource,
+                    onClick = { if (isMidiSupported) onUseMidiSource(true) else { } },
+                    label = { Text("蓝牙 MIDI") },
+                    enabled = isMidiSupported
                 )
             }
-            when (val pitch = currentPitch) {
-                is PitchResult.Pitch -> {
+            if (useMidiSource) {
+                if (!isMidiSupported) {
                     Text(
-                        text = "当前弹奏：${pitch.note.displayName()}",
+                        text = "当前设备不支持 MIDI",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PianoTheme.colors.error,
+                        modifier = Modifier.padding(top = 6.dp)
+                    )
+                } else {
+                    if (midiConnected) {
+                        Text(
+                            text = "已连接，直接弹奏",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PianoTheme.colors.primary,
+                            modifier = Modifier.padding(top = 6.dp)
+                        )
+                        Button(onClick = onDisconnectMidi, modifier = Modifier.padding(top = 6.dp)) {
+                            Text("断开 MIDI")
+                        }
+                    } else {
+                        Button(
+                            onClick = onScanBleMidi,
+                            modifier = Modifier.padding(top = 6.dp),
+                            enabled = !isScanningBle
+                        ) {
+                            Text(if (isScanningBle) "扫描中…" else "扫描蓝牙 MIDI 设备")
+                        }
+                        midiConnectionError?.let { err ->
+                            Text(
+                                text = err,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = PianoTheme.colors.error,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                            TextButton(onClick = onClearMidiError) { Text("清除") }
+                        }
+                        if (scannedBleMidiDevices.isEmpty() && !isScanningBle) {
+                            Text(
+                                text = if (isBluetoothEnabled)
+                                    "请打开电钢的蓝牙后点击「扫描蓝牙 MIDI 设备」，再在列表中点击设备连接"
+                                else
+                                    "请先打开手机蓝牙后再点击「扫描蓝牙 MIDI 设备」",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        } else if (scannedBleMidiDevices.isNotEmpty()) {
+                            Text(
+                                text = "蓝牙 MIDI 设备（点击连接）",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                            scannedBleMidiDevices.forEach { device ->
+                                TextButton(onClick = { onConnectBluetoothMidi(device) }) {
+                                    Text(getBluetoothDeviceDisplayName(device))
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                val next = piece.notes.getOrNull(currentIndex)
+                if (next != null) {
+                    Text(
+                        text = "当前应为：${next.displayName()}",
                         style = MaterialTheme.typography.titleSmall,
                         color = PianoTheme.colors.primary,
-                        modifier = Modifier.padding(top = 6.dp)
+                        modifier = Modifier.padding(top = 8.dp)
                     )
                 }
-                is PitchResult.Listening -> {
+                when (val pitch = currentPitch) {
+                    is PitchResult.Pitch -> {
+                        Text(
+                            text = "当前弹奏：${pitch.note.displayName()}",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = PianoTheme.colors.primary,
+                            modifier = Modifier.padding(top = 6.dp)
+                        )
+                    }
+                    is PitchResult.Listening -> {
+                        Text(
+                            text = "正在听…",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(top = 6.dp)
+                        )
+                    }
+                    null -> { }
+                }
+                if (permissionDenied) {
                     Text(
-                        text = "正在听…",
+                        text = "需要麦克风权限才能识别琴声",
                         style = MaterialTheme.typography.bodySmall,
-                        color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
+                        color = PianoTheme.colors.error,
                         modifier = Modifier.padding(top = 6.dp)
                     )
                 }
-                null -> { }
+                Spacer(modifier = Modifier.height(10.dp))
+                Button(
+                    onClick = if (isRecording) onStopPlaying else onStartPlaying
+                ) {
+                    Icon(
+                        imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(if (isRecording) "停止弹奏" else "开始弹奏")
+                }
             }
-            if (permissionDenied) {
-                Text(
-                    text = "需要麦克风权限才能识别琴声",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = PianoTheme.colors.error,
-                    modifier = Modifier.padding(top = 6.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Button(
-                onClick = if (isRecording) onStopPlaying else onStartPlaying
-            ) {
-                Icon(
-                    imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(if (isRecording) "停止弹奏" else "开始弹奏")
+            if (useMidiSource && midiConnected) {
+                val next = piece.notes.getOrNull(currentIndex)
+                if (next != null) {
+                    Text(
+                        text = "当前应为：${next.displayName()}",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = PianoTheme.colors.primary,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                when (val pitch = currentPitch) {
+                    is PitchResult.Pitch -> {
+                        Text(
+                            text = "当前弹奏：${pitch.note.displayName()}",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = PianoTheme.colors.primary,
+                            modifier = Modifier.padding(top = 6.dp)
+                        )
+                    }
+                    is PitchResult.Listening -> {
+                        Text(
+                            text = "等待 MIDI 输入…",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(top = 6.dp)
+                        )
+                    }
+                    null -> { }
+                }
             }
         }
     }

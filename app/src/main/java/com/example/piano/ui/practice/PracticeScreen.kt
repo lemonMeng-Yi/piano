@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.example.piano.core.audio.PitchResult
 import com.example.piano.navigation.NavigationActions
 import com.example.piano.ui.theme.PianoTheme
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.core.content.ContextCompat
 
@@ -33,7 +33,7 @@ fun PracticePage(navController: NavHostController) {
     var isPlaying by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0.45f) }
     val navActions = remember(navController) { NavigationActions(navController) }
-    val viewModel: PracticeViewModel = viewModel()
+    val viewModel: PracticeViewModel = hiltViewModel()
     val currentPitch by viewModel.currentPitch.collectAsState()
     val isRecording by viewModel.isRecording.collectAsState()
     val permissionDenied by viewModel.permissionDenied.collectAsState()
