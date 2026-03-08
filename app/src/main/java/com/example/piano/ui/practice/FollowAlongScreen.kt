@@ -46,8 +46,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -68,6 +68,37 @@ private val DEFAULT_PIECE = PracticePiece(
     title = "C 大调音阶",
     notes = listOf(60, 62, 64, 65, 67, 69, 71, 72, 71, 69, 67, 65, 64, 62, 60).map { Note(it) }
 )
+
+/** 跟弹页入口：先显示加载页，等渲染稳定后再显示跟弹内容。
+ * 入口内统一隐藏系统栏，使加载页与跟弹页显示范围一致（无状态栏、无底部栏）。 */
+@Composable
+fun FollowAlongEntry(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val activity = context as? Activity
+    var ready by remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        val window = activity?.window ?: return@DisposableEffect onDispose {}
+        val decorView = window.decorView
+        val insetsController = ViewCompat.getWindowInsetsController(decorView)
+        insetsController?.hide(WindowInsetsCompat.Type.statusBars())
+        insetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        onDispose {
+            insetsController?.show(WindowInsetsCompat.Type.statusBars())
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        delay(550)
+        ready = true
+    }
+
+    if (ready) {
+        FollowAlongScreen(onBack = onBack)
+    } else {
+        FollowAlongLoadingScreen()
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

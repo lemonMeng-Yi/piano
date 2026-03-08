@@ -1,7 +1,5 @@
 package com.example.piano.navigation
 
-import android.app.Activity
-import android.content.pm.ActivityInfo
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -17,16 +15,14 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.piano.ui.home.screen.HomePage
-import com.example.piano.ui.practice.FollowAlongScreen
+import com.example.piano.ui.practice.FollowAlongEntry
 import com.example.piano.ui.practice.PracticePage
 import com.example.piano.ui.profile.ProfilePage
 import com.example.piano.ui.progress.ProgressPage
@@ -62,16 +58,6 @@ fun MainNavHost(
     // 获取当前路由，用于底部导航栏选中状态
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val context = LocalContext.current
-    val activity = context as? Activity
-
-    // 跟弹页强制横屏，便于显示完整钢琴键盘；离开时恢复
-    LaunchedEffect(currentRoute) {
-        activity?.requestedOrientation = when (currentRoute) {
-            NavRoutes.PRACTICE_FOLLOW_ALONG -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        }
-    }
 
     Scaffold(
         bottomBar = {
@@ -121,7 +107,7 @@ fun MainNavHost(
                     PracticePage(navController = navController)
                 }
                 composable(NavRoutes.PRACTICE_FOLLOW_ALONG) {
-                    FollowAlongScreen(onBack = { navController.popBackStack() })
+                    FollowAlongEntry(onBack = { navController.popBackStack() })
                 }
                 composable(NavRoutes.PROGRESS) {
                     ProgressPage()
