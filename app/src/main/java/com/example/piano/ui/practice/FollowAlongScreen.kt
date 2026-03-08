@@ -125,6 +125,7 @@ fun FollowAlongScreen(
     val scannedBleMidiDevices by viewModel.scannedBleMidiDevices.collectAsState()
     val isScanningBle by viewModel.isScanningBle.collectAsState()
     val midiConnectionError by viewModel.midiConnectionError.collectAsState()
+    val isBluetoothEnabled by viewModel.bluetoothEnabled.collectAsState()
     val isMidiSupported = viewModel.isMidiSupported
     val context = LocalContext.current
 
@@ -327,7 +328,7 @@ fun FollowAlongScreen(
                         midiConnected = midiConnected,
                         scannedBleMidiDevices = scannedBleMidiDevices,
                         isScanningBle = isScanningBle,
-                        isBluetoothEnabled = viewModel.isBluetoothEnabled(),
+                        isBluetoothEnabled = isBluetoothEnabled,
                         midiConnectionError = midiConnectionError,
                         isMidiSupported = isMidiSupported,
                         getBluetoothDeviceDisplayName = viewModel::getBluetoothDeviceDisplayName,
@@ -509,6 +510,14 @@ private fun instructionCard(
                         modifier = Modifier.padding(top = 6.dp)
                     )
                 } else {
+                    if (!isBluetoothEnabled) {
+                        Text(
+                            text = "蓝牙已关闭",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PianoTheme.colors.error,
+                            modifier = Modifier.padding(top = 6.dp)
+                        )
+                    }
                     if (midiConnected) {
                         Text(
                             text = "已连接，直接弹奏",

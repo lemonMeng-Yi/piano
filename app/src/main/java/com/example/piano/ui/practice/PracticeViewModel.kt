@@ -1,6 +1,7 @@
 package com.example.piano.ui.practice
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
@@ -8,8 +9,12 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.media.midi.MidiManager
+import android.os.Build
 import android.os.ParcelUuid
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +30,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
@@ -38,8 +44,16 @@ class PracticeViewModel @Inject constructor(
     private val audioPitchCapture = AudioPitchCapture()
 
     private val midiManager = context.getSystemService(Context.MIDI_SERVICE) as? MidiManager
-    private val midiPitchSource = midiManager?.let { MidiPitchSource(it) }
+    /** 可替换的 MIDI 源：蓝牙关闭后重建，避免“设备仍被标记为已打开” */
+    private val _midiPitchSourceHolder = MutableStateFlow(midiManager?.let { MidiPitchSource(it) })
+    private val midiPitchSource: MidiPitchSource? get() = _midiPitchSourceHolder.value
     private val bluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
+
+    /** 蓝牙是否已打开（随系统蓝牙开关实时更新） */
+    private val _bluetoothEnabled = MutableStateFlow(bluetoothAdapter?.isEnabled == true)
+    val bluetoothEnabled: StateFlow<Boolean> = _bluetoothEnabled.asStateFlow()
+
+    private var bluetoothStateReceiver: BroadcastReceiver? = null
 
     /** 应用内扫描到的蓝牙 MIDI 设备（不依赖系统已配对列表） */
     private val _scannedBleMidiDevices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
@@ -60,7 +74,7 @@ class PracticeViewModel @Inject constructor(
     val currentPitch: StateFlow<PitchResult?> = combine(
         _useMidiSource,
         _midiConnected,
-        midiPitchSource?.currentPitch ?: flowOf(null),
+        _midiPitchSourceHolder.flatMapLatest { it?.currentPitch ?: flowOf(null) },
         audioPitchCapture.currentPitch
     ) { useMidi, connected, midiPitch, audioPitch ->
         if (useMidi && connected) midiPitch else audioPitch
@@ -80,8 +94,38 @@ class PracticeViewModel @Inject constructor(
 
     val isMidiSupported: Boolean = midiManager != null
 
-    /** 蓝牙是否已打开（未开时需先请求用户打开再扫描） */
-    fun isBluetoothEnabled(): Boolean = bluetoothAdapter?.isEnabled == true
+    init {
+        bluetoothStateReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
+                    val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF)
+                    val enabled = state == BluetoothAdapter.STATE_ON
+                    _bluetoothEnabled.value = enabled
+                    if (!enabled) onBluetoothTurnedOff()
+                }
+            }
+        }
+        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(bluetoothStateReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("DEPRECATION")
+            context.registerReceiver(bluetoothStateReceiver, filter)
+        }
+    }
+
+    /** 蓝牙关闭时：断开 MIDI、停止扫描并重建 MidiPitchSource，再次打开蓝牙后连接将使用新会话 */
+    private fun onBluetoothTurnedOff() {
+        midiPitchSource?.disconnect()
+        _midiConnected.value = false
+        _midiConnectionError.value = null
+        stopBleMidiScan()
+        _scannedBleMidiDevices.value = emptyList()
+        _midiPitchSourceHolder.value = midiManager?.let { MidiPitchSource(it) }
+    }
+
+    /** 蓝牙是否已打开（与 bluetoothEnabled StateFlow 一致，供兼容调用） */
+    fun isBluetoothEnabled(): Boolean = _bluetoothEnabled.value
 
     fun setUseMidiSource(use: Boolean) {
         _useMidiSource.value = use
@@ -221,7 +265,12 @@ class PracticeViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        super.onCleared()
+        bluetoothStateReceiver?.let {
+            try {
+                context.unregisterReceiver(it)
+            } catch (_: Exception) { }
+        }
+        bluetoothStateReceiver = null
         stopBleMidiScan()
         midiPitchSource?.disconnect()
         audioPitchCapture.stopCapture()
