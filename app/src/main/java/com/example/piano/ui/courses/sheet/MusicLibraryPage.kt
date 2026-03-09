@@ -17,9 +17,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -36,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -66,7 +70,8 @@ data class SheetMusicItem(
     val singerName: String,
     val likeCount: String,
     val favorited: Boolean = false,
-    val previewImageUrl: String? = null
+    val previewImageUrl: String? = null,
+    val mp3Url: String? = null
 )
 
 private fun formatFavoriteCount(n: Int): String = when {
@@ -84,7 +89,8 @@ private fun SheetItemDTO.toSheetMusicItem(): SheetMusicItem {
         singerName = artist,
         likeCount = formatFavoriteCount(favoriteCount),
         favorited = favorited,
-        previewImageUrl = previewImageUrl
+        previewImageUrl = previewImageUrl,
+        mp3Url = mp3Url
     )
 }
 
@@ -98,6 +104,17 @@ fun MusicLibraryContent(
     val scope = rememberCoroutineScope()
     val listState by viewModel.listState.collectAsState()
     val favoritesState by viewModel.favoritesState.collectAsState()
+    val playingSheetId by viewModel.playingSheetId.collectAsState()
+    val isPlaying by viewModel.isPlaying.collectAsState()
+    val snackbarMessage by viewModel.snackbarMessage.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(snackbarMessage) {
+        snackbarMessage?.let { msg ->
+            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.clearSnackbarMessage()
+        }
+    }
 
     LaunchedEffect(pagerState.currentPage) {
         if (pagerState.currentPage == SheetMusicTab.FAVORITES.ordinal) {
@@ -159,13 +176,15 @@ fun MusicLibraryContent(
                 SheetMusicTab.SHEET_MUSIC -> SheetMusicListContent(
                     listState = listState,
                     onRetry = { viewModel.loadList() },
-                    onOpenSheetDetail = onOpenSheetDetail
+                    onOpenSheetDetail = onOpenSheetDetail,
+                    viewModel = viewModel
                 )
                 SheetMusicTab.FAVORITES -> FavoritesContent(
                     favoritesState = favoritesState,
                     onRetry = { viewModel.loadFavorites() },
                     onNavigateToLogin = onNavigateToLogin,
-                    onOpenSheetDetail = onOpenSheetDetail
+                    onOpenSheetDetail = onOpenSheetDetail,
+                    viewModel = viewModel
                 )
             }
         }
@@ -176,7 +195,8 @@ fun MusicLibraryContent(
 private fun SheetMusicListContent(
     listState: SheetListUiState,
     onRetry: () -> Unit,
-    onOpenSheetDetail: (Long) -> Unit
+    onOpenSheetDetail: (Long) -> Unit,
+    viewModel: SheetViewModel
 ) {
     when (listState) {
         is SheetListUiState.Loading -> {
@@ -195,6 +215,8 @@ private fun SheetMusicListContent(
             )
         }
         is SheetListUiState.Success -> {
+            val playingSheetId by viewModel.playingSheetId.collectAsState()
+            val isPlaying by viewModel.isPlaying.collectAsState()
             val items = listState.list.map { it.toSheetMusicItem() }
             Column(
                 modifier = Modifier
@@ -207,6 +229,13 @@ private fun SheetMusicListContent(
                     SheetMusicListItem(
                         item = item,
                         onClick = { onOpenSheetDetail(item.id) },
+                        onPlayPauseClick = { viewModel.toggleAudio(item.id, item.mp3Url) },
+                        audioState = when {
+                            item.mp3Url.isNullOrBlank() -> SheetAudioState.None
+                            playingSheetId != item.id -> SheetAudioState.None
+                            isPlaying -> SheetAudioState.Playing
+                            else -> SheetAudioState.Paused
+                        },
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
                 }
@@ -221,7 +250,8 @@ private fun FavoritesContent(
     favoritesState: SheetFavoritesUiState,
     onRetry: () -> Unit,
     onNavigateToLogin: () -> Unit,
-    onOpenSheetDetail: (Long) -> Unit
+    onOpenSheetDetail: (Long) -> Unit,
+    viewModel: SheetViewModel
 ) {
     when (favoritesState) {
         is SheetFavoritesUiState.Loading -> {
@@ -248,6 +278,8 @@ private fun FavoritesContent(
             )
         }
         is SheetFavoritesUiState.Success -> {
+            val playingSheetId by viewModel.playingSheetId.collectAsState()
+            val isPlaying by viewModel.isPlaying.collectAsState()
             val items = favoritesState.list.map { it.toSheetMusicItem() }
             if (items.isEmpty()) {
                 Box(
@@ -287,6 +319,13 @@ private fun FavoritesContent(
                         SheetMusicListItem(
                             item = item,
                             onClick = { onOpenSheetDetail(item.id) },
+                            onPlayPauseClick = { viewModel.toggleAudio(item.id, item.mp3Url) },
+                            audioState = when {
+                                item.mp3Url.isNullOrBlank() -> SheetAudioState.None
+                                playingSheetId != item.id -> SheetAudioState.None
+                                isPlaying -> SheetAudioState.Playing
+                                else -> SheetAudioState.Paused
+                            },
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
                     }
@@ -301,6 +340,8 @@ private fun FavoritesContent(
 private fun SheetMusicListItem(
     item: SheetMusicItem,
     onClick: () -> Unit,
+    onPlayPauseClick: () -> Unit,
+    audioState: SheetAudioState,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -316,14 +357,56 @@ private fun SheetMusicListItem(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = item.previewImageUrl ?: DEFAULT_SHEET_PREVIEW_URL,
-                contentDescription = item.title,
+            Box(
                 modifier = Modifier
                     .size(width = 100.dp, height = 72.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { onPlayPauseClick() }
+            ) {
+                AsyncImage(
+                    model = item.previewImageUrl ?: DEFAULT_SHEET_PREVIEW_URL,
+                    contentDescription = item.title,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                // 圆形播放/暂停按钮：半透明灰色背景，直径 30dp，居中显示
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = Color.DarkGray.copy(alpha = 0.5f),
+                        modifier = Modifier.size(30.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            when (audioState) {
+                                SheetAudioState.Playing -> Icon(
+                                    Icons.Outlined.Pause,
+                                    contentDescription = "暂停",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.White
+                                )
+                                SheetAudioState.Paused, SheetAudioState.None -> Icon(
+                                    Icons.Outlined.PlayArrow,
+                                    contentDescription = if (item.mp3Url.isNullOrBlank()) "暂无音频" else "播放",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+            }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(

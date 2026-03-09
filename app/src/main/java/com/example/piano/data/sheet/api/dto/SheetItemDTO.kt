@@ -28,6 +28,9 @@ data class SheetItemDTO(
     @SerializedName("midiUrl")
     val midiUrl: String? = null,
 
+    @SerializedName("mp3Url")
+    val mp3Url: String? = null,
+
     @SerializedName("favoriteCount")
     val favoriteCount: Int = 0,
 
