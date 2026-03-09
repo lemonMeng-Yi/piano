@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.piano.ui.components.NetworkErrorView
 import com.example.piano.ui.theme.PianoTheme
 
 /** 课程 Tab：学钢琴 / 曲谱 */
@@ -115,35 +116,33 @@ private fun LearnPianoContent(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
-    ) {
-        when (val state = uiState) {
-            is CoursesUiState.Loading -> {
-                Spacer(modifier = Modifier.height(20.dp))
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = PianoTheme.colors.primary)
-                }
-                Spacer(modifier = Modifier.height(24.dp))
+    when (val state = uiState) {
+        is CoursesUiState.Loading -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = PianoTheme.colors.primary)
             }
-            is CoursesUiState.Error -> {
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(
-                    text = state.message,
-                    color = PianoTheme.colors.error,
-                    modifier = Modifier.padding(16.dp)
-                )
-                TextButton(onClick = { viewModel.loadCategories() }) {
-                    Text("重试", color = PianoTheme.colors.primary)
-                }
-            }
-            is CoursesUiState.Success -> {
+        }
+        is CoursesUiState.Error -> {
+            NetworkErrorView(
+                onClick = { viewModel.loadCategories() },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                hintText = state.message
+            )
+        }
+        is CoursesUiState.Success -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+            ) {
                 Spacer(modifier = Modifier.height(20.dp))
                 state.categories.forEachIndexed { index, category ->
                     val (cardColor, accentColor, contentColor) = CARD_COLORS[index % CARD_COLORS.size]
