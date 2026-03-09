@@ -2,6 +2,7 @@ package com.example.piano.data.sheet.repository
 
 import com.example.piano.core.network.util.ResponseState
 import com.example.piano.core.network.util.toState
+import com.example.piano.core.network.util.toStateUnit
 import com.example.piano.data.sheet.api.SheetApi
 import com.example.piano.data.sheet.api.dto.SheetItemDTO
 import com.example.piano.domain.sheet.repository.SheetRepository
@@ -33,6 +34,22 @@ class SheetRepositoryImpl @Inject constructor(
     override suspend fun getById(id: Long): ResponseState<SheetItemDTO> {
         return try {
             sheetApi.getById(id).toState()
+        } catch (e: Exception) {
+            ResponseState.UnknownError(e)
+        }
+    }
+
+    override suspend fun addFavorite(id: Long): ResponseState<Unit> {
+        return try {
+            sheetApi.addFavorite(id).toStateUnit()
+        } catch (e: Exception) {
+            ResponseState.UnknownError(e)
+        }
+    }
+
+    override suspend fun removeFavorite(id: Long): ResponseState<Unit> {
+        return try {
+            sheetApi.removeFavorite(id).toStateUnit()
         } catch (e: Exception) {
             ResponseState.UnknownError(e)
         }

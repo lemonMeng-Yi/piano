@@ -19,7 +19,17 @@ interface SheetRepository {
     suspend fun listFavorites(): ResponseState<List<SheetItemDTO>>
 
     /**
-     * 曲谱详情（含 sheetDataUrl 等）
+     * 曲谱详情（含 sheetDataUrl、mp3Url、favorited 等）
      */
     suspend fun getById(id: Long): ResponseState<SheetItemDTO>
+
+    /**
+     * 收藏曲谱（需登录）
+     */
+    suspend fun addFavorite(id: Long): ResponseState<Unit>
+
+    /**
+     * 取消收藏曲谱（需登录）
+     */
+    suspend fun removeFavorite(id: Long): ResponseState<Unit>
 }

@@ -22,8 +22,12 @@ data class SheetItemDTO(
     @SerializedName("previewImageUrl")
     val previewImageUrl: String? = null,
 
-    @SerializedName("sheetDataUrl")
-    val sheetDataUrl: String? = null,
+    @SerializedName("staffSheetDataUrl")
+    val staffSheetDataUrl: String? = null,
+
+    /** 简谱图片 URL，对应接口字段 simpleSheetDataUrl，无则使用 sheetDataUrl */
+    @SerializedName("simpleSheetDataUrl")
+    val simplifiedSheetDataUrl: String? = null,
 
     @SerializedName("midiUrl")
     val midiUrl: String? = null,

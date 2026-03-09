@@ -66,3 +66,20 @@ fun <T : Any> Response<BaseResult<T>>.toState(): ResponseState<T> {
         }
     }
 }
+
+/**
+ * 将 Response<BaseResult<T>> 转为 ResponseState<Unit>，仅根据 code 判断成功与否，不解析 data。
+ * 用于收藏/取消收藏等返回 Void 的接口（T 可为 Unit 或 *）。
+ */
+fun <T> Response<BaseResult<T>>.toStateUnit(): ResponseState<Unit> {
+    return if (!isSuccessful) {
+        ResponseState.NetworkError(code(), errorBody()?.string() ?: "请求失败")
+    } else {
+        val body = body()
+        when {
+            body == null -> ResponseState.UnknownError(Exception("响应体为空"))
+            body.isSuccess() -> ResponseState.Success(Unit)
+            else -> ResponseState.NetworkError(body.code, body.msg)
+        }
+    }
+}

@@ -3,13 +3,21 @@ package com.example.piano.ui.courses.sheet
 import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -95,14 +103,70 @@ fun SheetDetailScreen(
     viewModel: SheetDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val favorited by viewModel.favorited.collectAsState()
+    val useStaffNotation by viewModel.useStaffNotation.collectAsState()
+    val playingSheetId by viewModel.playingSheetId.collectAsState()
+    val isPlaying by viewModel.isPlaying.collectAsState()
+    val snackbarMessage by viewModel.snackbarMessage.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(snackbarMessage) {
+        snackbarMessage?.let { msg ->
+            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.clearSnackbarMessage()
+        }
+    }
+
     val title = when (state) {
         is SheetDetailUiState.Success -> (state as SheetDetailUiState.Success).title
         else -> "曲谱详情"
     }
 
+    val successState = state as? SheetDetailUiState.Success
+    val displaySheetUrl = when {
+        successState == null -> null
+        useStaffNotation -> successState.staffSheetDataUrl
+        else -> successState.simplifiedSheetDataUrl ?: successState.staffSheetDataUrl
+    }
+
     Scaffold(
         topBar = {
-            BackTitleTopBar(title = title, onBack = onBack)
+            BackTitleTopBar(
+                title = title,
+                onBack = onBack,
+                trailingContent = if (successState != null) {
+                    {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { viewModel.toggleFavorite() }) {
+                                Icon(
+                                    imageVector = if (favorited) Icons.Filled.Star else Icons.Outlined.Star,
+                                    contentDescription = if (favorited) "取消收藏" else "收藏",
+                                    tint = if (favorited) PianoTheme.colors.primary else PianoTheme.colors.onSurface
+                                )
+                            }
+                            Text(
+                                text = if (useStaffNotation) "五线谱" else "简谱",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = PianoTheme.colors.onSurface
+                            )
+                            IconButton(onClick = { viewModel.setUseStaffNotation(!useStaffNotation) }) {
+                                Text(
+                                    text = "切换",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = PianoTheme.colors.primary
+                                )
+                            }
+                            IconButton(onClick = { viewModel.togglePlayPause(successState.mp3Url) }) {
+                                Icon(
+                                    imageVector = if (playingSheetId == viewModel.currentSheetId && isPlaying) Icons.Outlined.Pause else Icons.Outlined.PlayArrow,
+                                    contentDescription = if (isPlaying) "暂停" else "播放",
+                                    tint = PianoTheme.colors.onSurface
+                                )
+                            }
+                        }
+                    }
+                } else null
+            )
         },
         containerColor = PianoTheme.colors.surface
     ) { paddingValues ->
@@ -128,7 +192,7 @@ fun SheetDetailScreen(
                     )
                 }
                 is SheetDetailUiState.Success -> {
-                    val url = s.sheetDataUrl
+                    val url = displaySheetUrl
                     if (!url.isNullOrEmpty()) {
                         Box(
                             modifier = Modifier
