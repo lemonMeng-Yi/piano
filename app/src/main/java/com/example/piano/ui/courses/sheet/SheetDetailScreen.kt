@@ -2,16 +2,22 @@ package com.example.piano.ui.courses.sheet
 
 import android.app.Activity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Star
@@ -33,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -42,6 +49,8 @@ import coil.compose.AsyncImage
 import com.example.piano.ui.components.BackTitleTopBar
 import com.example.piano.ui.components.NetworkErrorView
 import com.example.piano.ui.theme.PianoTheme
+import com.example.piano.ui.practice.Full88PianoKeyboard
+import com.example.piano.ui.practice.rememberPianoKeyboardBottomHeight
 import kotlinx.coroutines.delay
 
 const val SHEET_ID_KEY = "sheetId"
@@ -107,6 +116,7 @@ fun SheetDetailScreen(
     val useStaffNotation by viewModel.useStaffNotation.collectAsState()
     val playingSheetId by viewModel.playingSheetId.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
+    val activeMidiKeys by viewModel.activeMidiKeys.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
     val context = LocalContext.current
 
@@ -131,51 +141,66 @@ fun SheetDetailScreen(
 
     var showPracticeMethodDialog by remember { mutableStateOf(false) }
 
+    /** 当前曲谱正在播放时弹出键盘（随 MIDI 高亮） */
+    val showKeyboard = successState != null &&
+        playingSheetId == viewModel.currentSheetId &&
+        isPlaying
+
     Scaffold(
         topBar = {
-            BackTitleTopBar(
-                title = title,
-                onBack = onBack,
-                trailingContent = if (successState != null) {
-                    {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { showPracticeMethodDialog = true }) {
+            Column(modifier = Modifier.fillMaxWidth().background(PianoTheme.colors.surface)) {
+                Spacer(modifier = Modifier.height(30.dp))
+                BackTitleTopBar(
+                    title = "",
+                    onBack = onBack,
+                    trailingContent = if (successState != null) {
+                        {
+                            Row(
+                                modifier = Modifier.width(220.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                IconButton(onClick = { showPracticeMethodDialog = true }) {
+                                    Text(
+                                        text = "练琴",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp),
+                                        color = PianoTheme.colors.primary
+                                    )
+                                }
+                                IconButton(onClick = { viewModel.toggleFavorite() }) {
+                                    Icon(
+                                        imageVector = if (favorited) Icons.Filled.Star else Icons.Outlined.Star,
+                                        contentDescription = if (favorited) "取消收藏" else "收藏",
+                                        tint = if (favorited) PianoTheme.colors.primary else PianoTheme.colors.onSurface,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                }
                                 Text(
-                                    text = "练琴",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = PianoTheme.colors.primary
+                                    text = if (useStaffNotation) "五线谱" else "简谱",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp),
+                                    color = PianoTheme.colors.onSurface,
+                                    modifier = Modifier.padding(horizontal = 4.dp)
                                 )
-                            }
-                            IconButton(onClick = { viewModel.toggleFavorite() }) {
-                                Icon(
-                                    imageVector = if (favorited) Icons.Filled.Star else Icons.Outlined.Star,
-                                    contentDescription = if (favorited) "取消收藏" else "收藏",
-                                    tint = if (favorited) PianoTheme.colors.primary else PianoTheme.colors.onSurface
-                                )
-                            }
-                            Text(
-                                text = if (useStaffNotation) "五线谱" else "简谱",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = PianoTheme.colors.onSurface
-                            )
-                            IconButton(onClick = { viewModel.setUseStaffNotation(!useStaffNotation) }) {
-                                Text(
-                                    text = "切换",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = PianoTheme.colors.primary
-                                )
-                            }
-                            IconButton(onClick = { viewModel.togglePlayPause(successState.mp3Url) }) {
-                                Icon(
-                                    imageVector = if (playingSheetId == viewModel.currentSheetId && isPlaying) Icons.Outlined.Pause else Icons.Outlined.PlayArrow,
-                                    contentDescription = if (isPlaying) "暂停" else "播放",
-                                    tint = PianoTheme.colors.onSurface
-                                )
+                                IconButton(onClick = { viewModel.setUseStaffNotation(!useStaffNotation) }) {
+                                    Text(
+                                        text = "切换",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp),
+                                        color = PianoTheme.colors.primary
+                                    )
+                                }
+                                IconButton(onClick = { viewModel.togglePlayPause(successState.mp3Url) }) {
+                                    Icon(
+                                        imageVector = if (playingSheetId == viewModel.currentSheetId && isPlaying) Icons.Outlined.Pause else Icons.Outlined.PlayArrow,
+                                        contentDescription = if (isPlaying) "暂停" else "播放",
+                                        tint = PianoTheme.colors.onSurface,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                }
                             }
                         }
-                    }
-                } else null
-            )
+                    } else null
+                )
+            }
         },
         containerColor = PianoTheme.colors.surface
     ) { paddingValues ->
@@ -214,7 +239,7 @@ fun SheetDetailScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(16.dp),
-                                contentScale = ContentScale.Fit
+                                contentScale = ContentScale.FillWidth
                             )
                         }
                     } else {
@@ -229,6 +254,44 @@ fun SheetDetailScreen(
                             )
                         }
                     }
+                }
+            }
+
+            if (showKeyboard) {
+                val keyboardHeightDp = rememberPianoKeyboardBottomHeight()
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .background(PianoTheme.colors.surface)
+                        .padding(horizontal = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "随播键盘",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = PianoTheme.colors.onSurface
+                        )
+                        IconButton(onClick = { viewModel.togglePlayPause(successState?.mp3Url) }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Close,
+                                contentDescription = "收起键盘",
+                                tint = PianoTheme.colors.onSurface
+                            )
+                        }
+                    }
+                    Full88PianoKeyboard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(keyboardHeightDp),
+                        activeMidiSet = activeMidiKeys,
+                        showOctaveLabels = true,
+                        onKeyPress = { }
+                    )
                 }
             }
         }

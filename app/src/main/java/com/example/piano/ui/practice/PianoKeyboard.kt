@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -76,11 +77,20 @@ private val borderWidth = 0.5.dp
 private const val BLACK_HEIGHT_RATIO = 0.62f
 private const val BLACK_WIDTH_RATIO = 0.65f
 
+/** 底部琴键条推荐高度（与跟弹页一致）：屏高 22%，限制在 100.dp～150.dp，用于随播/跟弹等底部固定键盘。 */
+@Composable
+fun rememberPianoKeyboardBottomHeight(): androidx.compose.ui.unit.Dp {
+    val config = LocalConfiguration.current
+    return (config.screenHeightDp.dp * 0.22f).coerceIn(100.dp, 150.dp)
+}
+
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun Full88PianoKeyboard(
     modifier: Modifier = Modifier,
     highlightMidi: Int? = null,
+    /** 当前应高亮的多个 MIDI 键（如随 MIDI 播放），优先于 highlightMidi */
+    activeMidiSet: Set<Int> = emptySet(),
     wrongMidi: Int? = null,
     showOctaveLabels: Boolean = true,
     onKeyPress: (Note) -> Unit
@@ -99,7 +109,7 @@ fun Full88PianoKeyboard(
 
         Row(Modifier.fillMaxWidth().width(maxWidth)) {
             whiteMidis.forEach { midi ->
-                val highlight = highlightMidi == midi
+                val highlight = midi in activeMidiSet || highlightMidi == midi
                 val wrong = wrongMidi == midi
                 val fillColor = when {
                     wrong -> PianoTheme.colors.error.copy(alpha = 0.5f)
@@ -160,7 +170,7 @@ fun Full88PianoKeyboard(
                 .align(Alignment.TopStart)
         ) {
             blackKeys.forEach { (midi, centerLineIndex) ->
-                val highlight = highlightMidi == midi
+                val highlight = midi in activeMidiSet || highlightMidi == midi
                 val wrong = wrongMidi == midi
                 val centerX = whiteW * centerLineIndex
                 val left = centerX - blackW / 2

@@ -4,13 +4,18 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.piano.core.audio.SheetAudioPlaybackManager
+import com.example.piano.core.midi.MidiFileParser
 import com.example.piano.core.network.util.ResponseState
 import com.example.piano.domain.sheet.repository.SheetRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.URL
 import javax.inject.Inject
 
 /** 曲谱详情页 UI 状态 */
@@ -21,6 +26,7 @@ sealed class SheetDetailUiState {
         val staffSheetDataUrl: String?,
         val simplifiedSheetDataUrl: String?,
         val mp3Url: String?,
+        val midiUrl: String?,
         val favorited: Boolean
     ) : SheetDetailUiState()
     data class Error(val message: String) : SheetDetailUiState()
@@ -55,6 +61,14 @@ class SheetDetailViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage.asStateFlow()
 
+    /** 随 MIDI 播放高亮的琴键（MIDI 音高集合），仅在本条曲谱播放且有 midiUrl 时有值 */
+    private val _activeMidiKeys = MutableStateFlow<Set<Int>>(emptySet())
+    val activeMidiKeys: StateFlow<Set<Int>> = _activeMidiKeys.asStateFlow()
+
+    /** 当前曲谱的 MIDI 音符区间 [startMs, endMs) -> midi，解析成功后缓存 */
+    private var midiSegments: List<Triple<Long, Long, Int>> = emptyList()
+    private var loadedMidiUrl: String? = null
+
     fun clearSnackbarMessage() { _snackbarMessage.value = null }
 
     fun setUseStaffNotation(useStaff: Boolean) {
@@ -88,6 +102,65 @@ class SheetDetailViewModel @Inject constructor(
 
     init {
         loadDetail()
+        viewModelScope.launch {
+            combine(
+                audioPlayback.playingSheetId,
+                audioPlayback.isPlaying,
+                audioPlayback.playbackPositionMs,
+                _state
+            ) { playingId, playing, positionMs, uiState ->
+                Triple(playingId == sheetId && playing, positionMs, uiState)
+            }.collect { (isThisSheetPlaying, positionMs, uiState) ->
+                if (!isThisSheetPlaying) {
+                    _activeMidiKeys.value = emptySet()
+                    return@collect
+                }
+                val success = uiState as? SheetDetailUiState.Success ?: return@collect
+                val midiUrl = success.midiUrl
+                if (midiUrl.isNullOrBlank()) {
+                    _activeMidiKeys.value = emptySet()
+                    return@collect
+                }
+                if (midiSegments.isEmpty() || loadedMidiUrl != midiUrl) {
+                    loadedMidiUrl = midiUrl
+                    midiSegments = loadMidiSegments(midiUrl)
+                }
+                _activeMidiKeys.value = midiSegments
+                    .filter { (start, end, _) -> positionMs >= start && positionMs < end }
+                    .map { it.third }
+                    .toSet()
+            }
+        }
+    }
+
+    /** 从 midiUrl 下载并解析 MIDI，返回 [startMs, endMs, midi] 区间列表 */
+    private suspend fun loadMidiSegments(midiUrl: String): List<Triple<Long, Long, Int>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val bytes = URL(midiUrl).openStream().use { it.readBytes() }
+                val events = MidiFileParser.parseNoteEvents(bytes)
+                buildNoteSegments(events)
+            } catch (e: Exception) {
+                emptyList()
+            }
+        }
+    }
+
+    /** 将按时间排序的 NoteEvent 转为 [onMs, offMs, midi] 区间 */
+    private fun buildNoteSegments(events: List<MidiFileParser.NoteEvent>): List<Triple<Long, Long, Int>> {
+        val byNote = events.groupBy { it.midiNote }.mapValues { (_, list) -> list.sortedBy { it.timeMs } }
+        val segments = mutableListOf<Triple<Long, Long, Int>>()
+        for ((midi, list) in byNote) {
+            var lastOnMs: Long? = null
+            for (e in list) {
+                if (e.isOn) lastOnMs = e.timeMs
+                else if (lastOnMs != null) {
+                    segments.add(Triple(lastOnMs, e.timeMs, midi))
+                    lastOnMs = null
+                }
+            }
+        }
+        return segments
     }
 
     fun loadDetail() {
@@ -105,6 +178,7 @@ class SheetDetailViewModel @Inject constructor(
                         staffSheetDataUrl = dto.staffSheetDataUrl,
                         simplifiedSheetDataUrl = dto.simplifiedSheetDataUrl,
                         mp3Url = dto.mp3Url,
+                        midiUrl = dto.midiUrl,
                         favorited = dto.favorited
                     )
                     _favorited.value = dto.favorited
