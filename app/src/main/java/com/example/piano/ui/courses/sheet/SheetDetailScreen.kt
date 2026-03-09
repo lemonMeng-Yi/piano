@@ -465,8 +465,10 @@ fun SheetDetailScreen(
 
                 if (showPracticeResultDialog) {
                     val total = notes.size
+                    val playedCount = currentIndex
                     val wrongCount = records.filter { !it.isCorrect }.map { it.index }.toSet().size
-                    val accuracy = if (total > 0) ((total - wrongCount) * 100 / total) else 100
+                    val progressPercent = if (total > 0) playedCount * 100 / total else 0
+                    val accuracyPercent = if (playedCount > 0) (playedCount - wrongCount) * 100 / playedCount else 100
                     Dialog(onDismissRequest = { }) {
                         Card(
                             shape = RoundedCornerShape(16.dp),
@@ -475,16 +477,31 @@ fun SheetDetailScreen(
                         ) {
                             Column(Modifier.padding(24.dp)) {
                                 Text(
-                                    text = "练习完成",
+                                    text = "练习结果",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "正确率：（$total - $wrongCount 错）/ $total = $accuracy%",
+                                    text = "进度：已弹 $playedCount / 总 $total 个音（$progressPercent%）",
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = PianoTheme.colors.primary,
+                                    color = PianoTheme.colors.onSurface,
                                     modifier = Modifier.padding(top = 12.dp)
                                 )
+                                if (playedCount > 0) {
+                                    Text(
+                                        text = "正确率（按已弹数量）：（$playedCount - $wrongCount 错）/ $playedCount = $accuracyPercent%",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = PianoTheme.colors.primary,
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+                                } else {
+                                    Text(
+                                        text = "尚未弹奏，无正确率",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+                                }
                                 if (wrongCount > 0) {
                                     Text(
                                         text = "错了 $wrongCount 个音",
