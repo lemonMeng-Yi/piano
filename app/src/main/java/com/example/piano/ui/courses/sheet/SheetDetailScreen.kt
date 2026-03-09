@@ -1,6 +1,11 @@
 package com.example.piano.ui.courses.sheet
 
+import android.content.pm.PackageManager
+import android.Manifest
 import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -69,6 +74,7 @@ import com.example.piano.ui.components.BackTitleTopBar
 import com.example.piano.ui.components.NetworkErrorView
 import com.example.piano.ui.theme.PianoTheme
 import com.example.piano.core.audio.PianoKeySound
+import com.example.piano.core.audio.PitchResult
 import com.example.piano.domain.practice.Note
 import com.example.piano.ui.practice.Full88PianoKeyboard
 import com.example.piano.ui.practice.rememberPianoKeyboardBottomHeight
@@ -186,6 +192,11 @@ fun SheetDetailScreen(
     val showVirtualPracticeKeyboard by viewModel.showVirtualPracticeKeyboard.collectAsState()
     val virtualPracticeNotes by viewModel.virtualPracticeNotes.collectAsState()
     val virtualPracticeLoading by viewModel.virtualPracticeLoading.collectAsState()
+    val showSoundPracticeKeyboard by viewModel.showSoundPracticeKeyboard.collectAsState()
+    val soundPracticeNotes by viewModel.soundPracticeNotes.collectAsState()
+    val soundPracticeLoading by viewModel.soundPracticeLoading.collectAsState()
+    val soundPracticeCurrentPitch by viewModel.soundPracticeCurrentPitch.collectAsState()
+    val soundPracticeRecording by viewModel.soundPracticeRecording.collectAsState()
     val context = LocalContext.current
 
     LaunchedEffect(snackbarMessage) {
@@ -209,6 +220,24 @@ fun SheetDetailScreen(
 
     var showPracticeMethodDialog by remember { mutableStateOf(false) }
 
+    /** 声音识别：先弹权限弹窗，同意后再显示键盘 */
+    var pendingSoundPermissionRequest by remember { mutableStateOf(false) }
+    val soundPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) viewModel.startSoundPractice()
+        else viewModel.onSoundPracticePermissionDenied()
+    }
+    LaunchedEffect(pendingSoundPermissionRequest) {
+        if (!pendingSoundPermissionRequest) return@LaunchedEffect
+        pendingSoundPermissionRequest = false
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            viewModel.startSoundPractice()
+        } else {
+            soundPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
+
     /** 当前曲谱正在播放时弹出键盘（随 MIDI 高亮）；虚拟键盘练琴时显示练琴键盘而非随播 */
     val showPlaybackKeyboard = successState != null &&
         playingSheetId == viewModel.currentSheetId &&
@@ -217,6 +246,10 @@ fun SheetDetailScreen(
     /** 虚拟键盘练琴：底部键盘 + 对绿错红逻辑，弹完后弹窗显示结果 */
     val practiceNotes = virtualPracticeNotes
     val showPracticeKeyboard = showVirtualPracticeKeyboard && practiceNotes != null && practiceNotes.isNotEmpty()
+
+    /** 声音识别练琴：底部键盘 + 麦克风识别比对，弹完后弹窗显示结果 */
+    val soundNotes = soundPracticeNotes
+    val showSoundPractice = showSoundPracticeKeyboard && soundNotes != null && soundNotes.isNotEmpty()
 
     Scaffold(
         topBar = {
@@ -368,6 +401,234 @@ fun SheetDetailScreen(
                         modifier = Modifier.size(24.dp),
                         color = PianoTheme.colors.primary
                     )
+                }
+            }
+
+            if (showSoundPracticeKeyboard && soundPracticeLoading) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .background(PianoTheme.colors.surface)
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "正在加载 MIDI…",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = PianoTheme.colors.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = PianoTheme.colors.primary
+                    )
+                }
+            }
+
+            if (showSoundPractice) {
+                val notes = soundNotes!!
+                var currentIndex by remember(notes) { mutableStateOf(0) }
+                val records = remember(notes) { mutableStateListOf<com.example.piano.domain.practice.CorrectionRecord>() }
+                var wrongMidi by remember { mutableStateOf<Int?>(null) }
+                var correctMidi by remember { mutableStateOf<Int?>(null) }
+                var finished by remember { mutableStateOf(false) }
+                var showResultDialog by remember { mutableStateOf(false) }
+                var hasAdvancedForCurrentIndex by remember { mutableStateOf(false) }
+                var lastRecordedWrongMidi by remember { mutableStateOf<Int?>(null) }
+                var hasStartedCapture by remember { mutableStateOf(false) }
+
+                LaunchedEffect(showSoundPractice) {
+                    if (showSoundPractice && !hasStartedCapture) {
+                        hasStartedCapture = true
+                        viewModel.startPitchCapture()
+                    }
+                }
+
+                LaunchedEffect(currentIndex) {
+                    hasAdvancedForCurrentIndex = false
+                    lastRecordedWrongMidi = null
+                }
+
+                LaunchedEffect(soundPracticeCurrentPitch, currentIndex, finished) {
+                    if (finished) return@LaunchedEffect
+                    val pitch = soundPracticeCurrentPitch as? PitchResult.Pitch ?: return@LaunchedEffect
+                    val expected = notes.getOrNull(currentIndex) ?: return@LaunchedEffect
+                    if (pitch.note.midi == expected.midi) {
+                        if (hasAdvancedForCurrentIndex) return@LaunchedEffect
+                        hasAdvancedForCurrentIndex = true
+                        wrongMidi = null
+                        correctMidi = expected.midi
+                        records.add(
+                            com.example.piano.domain.practice.CorrectionRecord(
+                                index = currentIndex,
+                                expected = expected,
+                                actual = pitch.note,
+                                isCorrect = true
+                            )
+                        )
+                        currentIndex++
+                        if (currentIndex >= notes.size) {
+                            finished = true
+                            showResultDialog = true
+                        }
+                    } else {
+                        val prevNote = notes.getOrNull(currentIndex - 1)
+                        if (currentIndex > 0 && pitch.note.midi == prevNote?.midi) return@LaunchedEffect
+                        wrongMidi = pitch.note.midi
+                        if (pitch.note.midi == lastRecordedWrongMidi) return@LaunchedEffect
+                        lastRecordedWrongMidi = pitch.note.midi
+                        records.add(
+                            com.example.piano.domain.practice.CorrectionRecord(
+                                index = currentIndex,
+                                expected = expected,
+                                actual = pitch.note,
+                                isCorrect = false
+                            )
+                        )
+                    }
+                }
+
+                LaunchedEffect(wrongMidi) {
+                    if (wrongMidi != null) {
+                        delay(400)
+                        wrongMidi = null
+                    }
+                }
+                LaunchedEffect(correctMidi) {
+                    if (correctMidi != null) {
+                        delay(350)
+                        correctMidi = null
+                    }
+                }
+
+                DisposableEffect(Unit) {
+                    onDispose { viewModel.stopPitchCapture() }
+                }
+
+                val keyboardHeightDp = rememberPianoKeyboardBottomHeight()
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .background(PianoTheme.colors.surface)
+                        .padding(horizontal = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(
+                            onClick = {
+                                finished = true
+                                showResultDialog = true
+                            }
+                        ) {
+                            Text("提前结束", style = MaterialTheme.typography.bodyMedium)
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "声音识别练琴",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = PianoTheme.colors.onSurface
+                        )
+                        IconButton(onClick = { viewModel.dismissSoundPracticeKeyboard() }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Close,
+                                contentDescription = "收起键盘",
+                                tint = PianoTheme.colors.onSurface
+                            )
+                        }
+                    }
+                    Full88PianoKeyboard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(keyboardHeightDp),
+                        highlightMidi = notes.getOrNull(currentIndex)?.midi,
+                        wrongMidi = wrongMidi,
+                        correctMidi = correctMidi,
+                        showOctaveLabels = true,
+                        onKeyPress = { }
+                    )
+                }
+
+                if (showResultDialog) {
+                    val total = notes.size
+                    val playedCount = currentIndex
+                    val wrongCount = records.filter { !it.isCorrect }.map { it.index }.toSet().size
+                    val progressPercent = if (total > 0) playedCount * 100 / total else 0
+                    val accuracyPercent = if (playedCount > 0) (playedCount - wrongCount) * 100 / playedCount else 100
+                    Dialog(onDismissRequest = { }) {
+                        Card(
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = PianoTheme.colors.surface),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(Modifier.padding(24.dp)) {
+                                Text(
+                                    text = "练习结果",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "进度：已弹 $playedCount / 总 $total 个音（$progressPercent%）",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = PianoTheme.colors.onSurface,
+                                    modifier = Modifier.padding(top = 12.dp)
+                                )
+                                if (playedCount > 0) {
+                                    Text(
+                                        text = "正确率（按已弹数量）：（$playedCount - $wrongCount 错）/ $playedCount = $accuracyPercent%",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = PianoTheme.colors.primary,
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+                                } else {
+                                    Text(
+                                        text = "尚未弹奏，无正确率",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+                                }
+                                if (wrongCount > 0) {
+                                    Text(
+                                        text = "错了 $wrongCount 个音",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = PianoTheme.colors.onSurface.copy(alpha = 0.8f),
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 20.dp),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            showResultDialog = false
+                                            currentIndex = 0
+                                            records.clear()
+                                            wrongMidi = null
+                                            correctMidi = null
+                                            finished = false
+                                        }
+                                    ) {
+                                        Text("再来一次")
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Button(
+                                        onClick = {
+                                            showResultDialog = false
+                                            viewModel.dismissSoundPracticeKeyboard()
+                                        }
+                                    ) {
+                                        Text("关闭")
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -547,7 +808,7 @@ fun SheetDetailScreen(
                 }
             }
 
-            if (showPlaybackKeyboard && !showPracticeKeyboard) {
+            if (showPlaybackKeyboard && !showPracticeKeyboard && !showSoundPractice) {
                 val keyboardHeightDp = rememberPianoKeyboardBottomHeight()
                 Column(
                     modifier = Modifier
@@ -596,7 +857,10 @@ fun SheetDetailScreen(
                         showPracticeMethodDialog = false
                         viewModel.startVirtualPractice()
                     }
-                    PracticeMethod.SOUND_RECOGNITION,
+                    PracticeMethod.SOUND_RECOGNITION -> {
+                        showPracticeMethodDialog = false
+                        pendingSoundPermissionRequest = true
+                    }
                     PracticeMethod.BLUETOOTH_MIDI -> {
                         // TODO: 跳转对应陪练页
                     }

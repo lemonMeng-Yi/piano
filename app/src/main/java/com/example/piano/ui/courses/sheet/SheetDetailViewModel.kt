@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.piano.core.audio.SheetAudioPlaybackManager
+import com.example.piano.core.audio.AudioPitchCapture
+import com.example.piano.core.audio.PitchResult
 import com.example.piano.core.midi.MidiFileParser
 import com.example.piano.core.network.util.ResponseState
 import com.example.piano.domain.practice.Note
@@ -216,6 +218,93 @@ class SheetDetailViewModel @Inject constructor(
     fun dismissVirtualPracticeKeyboard() {
         _showVirtualPracticeKeyboard.value = false
         _virtualPracticeNotes.value = null
+    }
+
+    // ---------- 声音识别练琴（麦克风识别，逻辑同跟弹） ----------
+
+    private val audioPitchCapture = AudioPitchCapture()
+
+    /** 声音识别练琴：是否显示底部键盘 */
+    private val _showSoundPracticeKeyboard = MutableStateFlow(false)
+    val showSoundPracticeKeyboard: StateFlow<Boolean> = _showSoundPracticeKeyboard.asStateFlow()
+
+    /** 声音识别练琴：MIDI 解析出的按时间顺序的音符列表 */
+    private val _soundPracticeNotes = MutableStateFlow<List<Note>?>(null)
+    val soundPracticeNotes: StateFlow<List<Note>?> = _soundPracticeNotes.asStateFlow()
+
+    /** 声音识别练琴：是否正在加载 MIDI */
+    private val _soundPracticeLoading = MutableStateFlow(false)
+    val soundPracticeLoading: StateFlow<Boolean> = _soundPracticeLoading.asStateFlow()
+
+    val soundPracticeCurrentPitch: StateFlow<PitchResult?> = audioPitchCapture.currentPitch
+
+    private val _soundPracticeRecording = MutableStateFlow(false)
+    val soundPracticeRecording: StateFlow<Boolean> = _soundPracticeRecording.asStateFlow()
+
+    /** 开始声音识别练琴：加载 MIDI 后弹出键盘，用麦克风识别比对 */
+    fun startSoundPractice() {
+        val success = _state.value as? SheetDetailUiState.Success ?: run {
+            _snackbarMessage.value = "请先加载曲谱"
+            return
+        }
+        val midiUrl = success.midiUrl
+        if (midiUrl.isNullOrBlank()) {
+            _snackbarMessage.value = "该曲谱暂无 MIDI，无法使用声音识别练琴"
+            return
+        }
+        viewModelScope.launch {
+            _soundPracticeLoading.value = true
+            _soundPracticeNotes.value = null
+            val notes = withContext(Dispatchers.IO) {
+                try {
+                    val bytes = URL(midiUrl).openStream().use { it.readBytes() }
+                    val events = MidiFileParser.parseNoteEvents(bytes)
+                    events
+                        .filter { it.isOn }
+                        .sortedBy { it.timeMs }
+                        .map { Note(it.midiNote) }
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            }
+            _soundPracticeLoading.value = false
+            if (notes.isEmpty()) {
+                _snackbarMessage.value = "MIDI 解析无音符"
+            } else {
+                _soundPracticeNotes.value = notes
+                _showSoundPracticeKeyboard.value = true
+            }
+        }
+    }
+
+    /** 关闭声音识别练琴（停止麦克风并收起键盘） */
+    fun dismissSoundPracticeKeyboard() {
+        stopPitchCapture()
+        _showSoundPracticeKeyboard.value = false
+        _soundPracticeNotes.value = null
+    }
+
+    fun startPitchCapture() {
+        if (_soundPracticeRecording.value) return
+        _soundPracticeRecording.value = true
+        viewModelScope.launch {
+            val started = audioPitchCapture.startCapture()
+            _soundPracticeRecording.value = false
+        }
+    }
+
+    fun stopPitchCapture() {
+        audioPitchCapture.stopCapture()
+        _soundPracticeRecording.value = false
+    }
+
+    fun onSoundPracticePermissionDenied() {
+        _snackbarMessage.value = "需要麦克风权限"
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        audioPitchCapture.stopCapture()
     }
 
     fun loadDetail() {
