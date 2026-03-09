@@ -29,6 +29,7 @@ import com.example.piano.ui.courses.learn.CourseDetailPage
 import com.example.piano.ui.courses.learn.CourseVideoScreen
 import com.example.piano.ui.courses.learn.CourseVideoViewModel
 import com.example.piano.ui.courses.CoursesPage
+import com.example.piano.ui.courses.sheet.SheetDetailEntry
 import com.example.piano.ui.courses.sheet.SheetDetailScreen
 import com.example.piano.ui.practice.FollowAlongEntry
 import com.example.piano.ui.practice.PracticePage
@@ -61,7 +62,7 @@ fun MainNavHost(
     modifier: Modifier = Modifier
 ) {
     val navigationActions = NavigationActions(navController)
-    
+
     // 获取当前路由，用于底部导航栏选中状态
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -120,7 +121,8 @@ fun MainNavHost(
                     CoursesPage(
                         onPlayVideo = { navigationActions.navigateToCourseVideo(it) },
                         onOpenCourseDetail = { navigationActions.navigateToCourseDetail(it) },
-                        onOpenSheetDetail = { navigationActions.navigateToSheetDetail(it) }
+                        onOpenSheetDetail = { navigationActions.navigateToSheetDetail(it) },
+                        onNavigateToLogin = onLogout
                     )
                 }
                 composable(
@@ -142,8 +144,13 @@ fun MainNavHost(
                 composable(
                     route = "${NavRoutes.SHEET_DETAIL}/{sheetId}",
                     arguments = listOf(navArgument("sheetId") { type = NavType.LongType })
-                ) {
-                    SheetDetailScreen(onBack = { navController.popBackStack() })
+                ) { backStackEntry ->
+                    SheetDetailEntry(onBack = { navController.popBackStack() }) {
+                        SheetDetailScreen(
+                            onBack = { navController.popBackStack() },
+                            viewModel = hiltViewModel(backStackEntry)
+                        )
+                    }
                 }
                 composable(NavRoutes.PROFILE) {
                     ProfilePage(onLogout = onLogout)

@@ -42,6 +42,7 @@ fun CoursesPage(
     onPlayVideo: (String) -> Unit = {},
     onOpenCourseDetail: (String) -> Unit = {},
     onOpenSheetDetail: (Long) -> Unit = {},
+    onNavigateToLogin: () -> Unit = {},
     viewModel: CoursesViewModel = hiltViewModel()
 ) {
     val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
@@ -94,7 +95,10 @@ fun CoursesPage(
                 onPlayVideo = onPlayVideo,
                 onOpenCourseDetail = onOpenCourseDetail
             )
-            CourseTab.MUSIC_LIBRARY -> MusicLibraryContent(onOpenSheetDetail = onOpenSheetDetail)
+            CourseTab.MUSIC_LIBRARY -> MusicLibraryContent(
+                onOpenSheetDetail = onOpenSheetDetail,
+                onNavigateToLogin = onNavigateToLogin
+            )
         }
     }
 }

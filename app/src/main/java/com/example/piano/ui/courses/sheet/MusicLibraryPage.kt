@@ -91,6 +91,7 @@ private fun SheetItemDTO.toSheetMusicItem(): SheetMusicItem {
 @Composable
 fun MusicLibraryContent(
     onOpenSheetDetail: (Long) -> Unit = {},
+    onNavigateToLogin: () -> Unit = {},
     viewModel: SheetViewModel = hiltViewModel()
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
@@ -163,6 +164,7 @@ fun MusicLibraryContent(
                 SheetMusicTab.FAVORITES -> FavoritesContent(
                     favoritesState = favoritesState,
                     onRetry = { viewModel.loadFavorites() },
+                    onNavigateToLogin = onNavigateToLogin,
                     onOpenSheetDetail = onOpenSheetDetail
                 )
             }
@@ -218,6 +220,7 @@ private fun SheetMusicListContent(
 private fun FavoritesContent(
     favoritesState: SheetFavoritesUiState,
     onRetry: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     onOpenSheetDetail: (Long) -> Unit
 ) {
     when (favoritesState) {
@@ -234,7 +237,7 @@ private fun FavoritesContent(
                 modifier = Modifier.fillMaxSize(),
                 hintText = "请先登录",
                 buttonText = "去登录",
-                onClick = onRetry
+                onClick = onNavigateToLogin
             )
         }
         is SheetFavoritesUiState.Error -> {
