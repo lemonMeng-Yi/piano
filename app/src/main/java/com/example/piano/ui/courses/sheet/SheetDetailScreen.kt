@@ -34,6 +34,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.window.Dialog
 import androidx.compose.runtime.Composable
@@ -55,6 +56,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
@@ -308,6 +310,13 @@ fun SheetDetailScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .layout { measurable, constraints ->
+                                        val loose = constraints.copy(maxHeight = Int.MAX_VALUE)
+                                        val placeable = measurable.measure(loose)
+                                        layout(placeable.width, placeable.height) {
+                                            placeable.place(0, 0)
+                                        }
+                                    }
                                     .graphicsLayer(
                                         scaleX = scale,
                                         scaleY = scale,
@@ -420,6 +429,14 @@ fun SheetDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        TextButton(
+                            onClick = {
+                                finished = true
+                                showPracticeResultDialog = true
+                            }
+                        ) {
+                            Text("提前结束", style = MaterialTheme.typography.bodyMedium)
+                        }
                         Spacer(modifier = Modifier.weight(1f))
                         Text(
                             text = "虚拟键盘练琴",
