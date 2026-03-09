@@ -32,8 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -129,6 +129,8 @@ fun SheetDetailScreen(
         else -> successState.simplifiedSheetDataUrl ?: successState.staffSheetDataUrl
     }
 
+    var showPracticeMethodDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             BackTitleTopBar(
@@ -137,6 +139,13 @@ fun SheetDetailScreen(
                 trailingContent = if (successState != null) {
                     {
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { showPracticeMethodDialog = true }) {
+                                Text(
+                                    text = "练琴",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = PianoTheme.colors.primary
+                                )
+                            }
                             IconButton(onClick = { viewModel.toggleFavorite() }) {
                                 Icon(
                                     imageVector = if (favorited) Icons.Filled.Star else Icons.Outlined.Star,
@@ -223,5 +232,12 @@ fun SheetDetailScreen(
                 }
             }
         }
+    }
+
+    if (showPracticeMethodDialog) {
+        PracticeMethodDialog(
+            onDismiss = { showPracticeMethodDialog = false },
+            onSelectMethod = { /* TODO: 根据练琴方式跳转或进入对应陪练页 */ }
+        )
     }
 }
