@@ -1,4 +1,4 @@
-package com.example.piano.ui.courses
+package com.example.piano.ui.courses.learn
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel

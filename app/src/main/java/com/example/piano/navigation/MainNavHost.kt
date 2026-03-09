@@ -25,9 +25,9 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.piano.ui.home.screen.HomePage
-import com.example.piano.ui.courses.CourseDetailPage
-import com.example.piano.ui.courses.CourseVideoScreen
-import com.example.piano.ui.courses.CourseVideoViewModel
+import com.example.piano.ui.courses.learn.CourseDetailPage
+import com.example.piano.ui.courses.learn.CourseVideoScreen
+import com.example.piano.ui.courses.learn.CourseVideoViewModel
 import com.example.piano.ui.courses.CoursesPage
 import com.example.piano.ui.practice.FollowAlongEntry
 import com.example.piano.ui.practice.PracticePage

@@ -1,4 +1,4 @@
-package com.example.piano.ui.courses
+package com.example.piano.ui.courses.learn
 
 import android.net.Uri
 import androidx.compose.foundation.background

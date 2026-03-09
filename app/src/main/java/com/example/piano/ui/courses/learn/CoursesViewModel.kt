@@ -1,4 +1,4 @@
-package com.example.piano.ui.courses
+package com.example.piano.ui.courses.learn
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

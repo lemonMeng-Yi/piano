@@ -1,4 +1,4 @@
-package com.example.piano.ui.courses
+package com.example.piano.ui.courses.sheet
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

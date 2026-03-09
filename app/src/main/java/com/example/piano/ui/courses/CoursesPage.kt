@@ -28,6 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.piano.ui.courses.learn.CoursesViewModel
+import com.example.piano.ui.courses.learn.LearnPianoContent
+import com.example.piano.ui.courses.sheet.MusicLibraryContent
 import com.example.piano.ui.theme.PianoTheme
 
 /** 课程顶层 Tab：学钢琴 / 曲谱库 */
