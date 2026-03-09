@@ -97,6 +97,8 @@ fun Full88PianoKeyboard(
     /** 刚弹对的键，显示绿色，用于虚拟键盘练琴等反馈 */
     correctMidi: Int? = null,
     showOctaveLabels: Boolean = true,
+    /** 按下键时播放该键音高（模拟真琴），不传则不发声 */
+    playKeySound: (midi: Int) -> Unit = {},
     onKeyPress: (Note) -> Unit
 ) {
     val whiteMidis = remember { full88WhiteMidis() }
@@ -135,7 +137,10 @@ fun Full88PianoKeyboard(
                             else
                                 Modifier.border(borderWidth, WhiteKeyBorderColor, keyShape)
                         )
-                        .clickable { onKeyPress(Note(midi)) },
+                        .clickable {
+                            playKeySound(midi)
+                            onKeyPress(Note(midi))
+                        },
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     if (label != null) {
@@ -189,7 +194,10 @@ fun Full88PianoKeyboard(
                         .width(blackW)
                         .height(blackHeight)
                         .clip(blackShape)
-                        .clickable { onKeyPress(Note(midi)) }
+                        .clickable {
+                            playKeySound(midi)
+                            onKeyPress(Note(midi))
+                        }
                 ) {
                     Box(
                         modifier = Modifier

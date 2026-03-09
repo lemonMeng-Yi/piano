@@ -68,6 +68,7 @@ import coil.compose.AsyncImage
 import com.example.piano.ui.components.BackTitleTopBar
 import com.example.piano.ui.components.NetworkErrorView
 import com.example.piano.ui.theme.PianoTheme
+import com.example.piano.core.audio.PianoKeySound
 import com.example.piano.domain.practice.Note
 import com.example.piano.ui.practice.Full88PianoKeyboard
 import com.example.piano.ui.practice.rememberPianoKeyboardBottomHeight
@@ -372,6 +373,7 @@ fun SheetDetailScreen(
 
             if (showPracticeKeyboard) {
                 val notes = practiceNotes!!
+                val keySound = remember { PianoKeySound() }
                 var currentIndex by remember(notes) { mutableStateOf(0) }
                 val records = remember(notes) { mutableStateListOf<com.example.piano.domain.practice.CorrectionRecord>() }
                 var wrongMidi by remember { mutableStateOf<Int?>(null) }
@@ -459,6 +461,7 @@ fun SheetDetailScreen(
                         wrongMidi = wrongMidi,
                         correctMidi = correctMidi,
                         showOctaveLabels = true,
+                        playKeySound = { keySound.playNote(it) },
                         onKeyPress = ::onPracticeKeyPress
                     )
                 }
