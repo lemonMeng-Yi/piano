@@ -28,4 +28,7 @@ object NavRoutes {
 
     /** 曲谱详情页（sheetDataUrl 图片），路径参数：sheet_detail/{sheetId} */
     const val SHEET_DETAIL = "sheet_detail"
+
+    /** 曲谱虚拟键盘练琴页，路径参数：sheet_virtual_practice/{sheetId} */
+    const val SHEET_VIRTUAL_PRACTICE = "sheet_virtual_practice"
 }

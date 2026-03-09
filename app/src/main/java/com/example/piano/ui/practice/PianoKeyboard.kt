@@ -71,6 +71,8 @@ private val BlackKeyFill = Color(0xFF1A1A1A)
 private val BlackKeyTopHighlight = Color(0xFF404040)
 private val CurrentKeyYellow = Color(0xFFFFC107)
 private val CurrentKeyYellowDark = Color(0xFFE0A800)
+private val CorrectKeyGreen = Color(0xFF4CAF50)
+private val CorrectKeyGreenDark = Color(0xFF388E3C)
 private val OctaveLabelGray = Color(0xFF757575)
 
 private val borderWidth = 0.5.dp
@@ -92,6 +94,8 @@ fun Full88PianoKeyboard(
     /** 当前应高亮的多个 MIDI 键（如随 MIDI 播放），优先于 highlightMidi */
     activeMidiSet: Set<Int> = emptySet(),
     wrongMidi: Int? = null,
+    /** 刚弹对的键，显示绿色，用于虚拟键盘练琴等反馈 */
+    correctMidi: Int? = null,
     showOctaveLabels: Boolean = true,
     onKeyPress: (Note) -> Unit
 ) {
@@ -111,7 +115,9 @@ fun Full88PianoKeyboard(
             whiteMidis.forEach { midi ->
                 val highlight = midi in activeMidiSet || highlightMidi == midi
                 val wrong = wrongMidi == midi
+                val correct = correctMidi == midi
                 val fillColor = when {
+                    correct -> CorrectKeyGreen.copy(alpha = 0.92f)
                     wrong -> PianoTheme.colors.error.copy(alpha = 0.5f)
                     highlight -> CurrentKeyYellow.copy(alpha = 0.92f)
                     else -> Color.White
@@ -124,7 +130,7 @@ fun Full88PianoKeyboard(
                         .clip(keyShape)
                         .background(fillColor)
                         .then(
-                            if (highlight || wrong)
+                            if (highlight || wrong || correct)
                                 Modifier.border(2.dp, PianoTheme.colors.primary, keyShape)
                             else
                                 Modifier.border(borderWidth, WhiteKeyBorderColor, keyShape)
@@ -135,6 +141,7 @@ fun Full88PianoKeyboard(
                     if (label != null) {
                         val labelColor = when {
                             wrong -> PianoTheme.colors.onError
+                            correct -> Color.White
                             highlight -> Color(0xFF1A1A1A)
                             else -> OctaveLabelGray
                         }
@@ -172,6 +179,7 @@ fun Full88PianoKeyboard(
             blackKeys.forEach { (midi, centerLineIndex) ->
                 val highlight = midi in activeMidiSet || highlightMidi == midi
                 val wrong = wrongMidi == midi
+                val correct = correctMidi == midi
                 val centerX = whiteW * centerLineIndex
                 val left = centerX - blackW / 2
                 Box(
@@ -188,18 +196,19 @@ fun Full88PianoKeyboard(
                             .fillMaxSize()
                             .background(
                                 when {
+                                    correct -> CorrectKeyGreenDark
                                     wrong -> PianoTheme.colors.error
                                     highlight -> CurrentKeyYellowDark
                                     else -> BlackKeyFill
                                 }
                             )
                             .then(
-                                if (!highlight && !wrong)
+                                if (!highlight && !wrong && !correct)
                                     Modifier.border(1.dp, Color(0xFF0D0D0D), blackShape)
                                 else Modifier
                             )
                     )
-                    if (!highlight && !wrong) {
+                    if (!highlight && !wrong && !correct) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()

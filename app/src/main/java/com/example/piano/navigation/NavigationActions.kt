@@ -102,4 +102,11 @@ class NavigationActions(private val navController: NavController) {
     fun navigateToSheetDetail(sheetId: Long) {
         navController.navigate("${NavRoutes.SHEET_DETAIL}/$sheetId")
     }
+
+    /**
+     * 导航到曲谱虚拟键盘练琴页（按 MIDI 顺序点击琴键比对）
+     */
+    fun navigateToSheetVirtualPractice(sheetId: Long) {
+        navController.navigate("${NavRoutes.SHEET_VIRTUAL_PRACTICE}/$sheetId")
+    }
 }

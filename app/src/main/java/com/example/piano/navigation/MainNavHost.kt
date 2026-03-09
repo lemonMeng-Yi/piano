@@ -33,6 +33,7 @@ import com.example.piano.ui.courses.sheet.SheetDetailEntry
 import com.example.piano.ui.courses.sheet.SheetDetailScreen
 import com.example.piano.ui.practice.FollowAlongEntry
 import com.example.piano.ui.practice.PracticePage
+import com.example.piano.ui.practice.VirtualKeyboardPracticeScreen
 import com.example.piano.ui.profile.ProfilePage
 
 /**
@@ -69,7 +70,7 @@ fun MainNavHost(
 
     Scaffold(
         bottomBar = {
-            if (currentRoute != NavRoutes.PRACTICE_FOLLOW_ALONG && !currentRoute.orEmpty().startsWith("${NavRoutes.COURSE_VIDEO}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.COURSE_DETAIL}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.SHEET_DETAIL}/")) {
+            if (currentRoute != NavRoutes.PRACTICE_FOLLOW_ALONG && !currentRoute.orEmpty().startsWith("${NavRoutes.COURSE_VIDEO}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.COURSE_DETAIL}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.SHEET_DETAIL}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.SHEET_VIRTUAL_PRACTICE}/")) {
             NavigationBar(
                 containerColor = PianoTheme.colors.surface
             ) {
@@ -148,9 +149,19 @@ fun MainNavHost(
                     SheetDetailEntry(onBack = { navController.popBackStack() }) {
                         SheetDetailScreen(
                             onBack = { navController.popBackStack() },
+                            onNavigateToVirtualPractice = { navigationActions.navigateToSheetVirtualPractice(it) },
                             viewModel = hiltViewModel(backStackEntry)
                         )
                     }
+                }
+                composable(
+                    route = "${NavRoutes.SHEET_VIRTUAL_PRACTICE}/{sheetId}",
+                    arguments = listOf(navArgument("sheetId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    VirtualKeyboardPracticeScreen(
+                        onBack = { navController.popBackStack() },
+                        viewModel = hiltViewModel(backStackEntry)
+                    )
                 }
                 composable(NavRoutes.PROFILE) {
                     ProfilePage(onLogout = onLogout)

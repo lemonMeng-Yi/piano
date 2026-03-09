@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.piano.core.audio.SheetAudioPlaybackManager
 import com.example.piano.core.midi.MidiFileParser
 import com.example.piano.core.network.util.ResponseState
+import com.example.piano.domain.practice.Note
 import com.example.piano.domain.sheet.repository.SheetRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -68,6 +69,18 @@ class SheetDetailViewModel @Inject constructor(
     /** 当前曲谱的 MIDI 音符区间 [startMs, endMs) -> midi，解析成功后缓存 */
     private var midiSegments: List<Triple<Long, Long, Int>> = emptyList()
     private var loadedMidiUrl: String? = null
+
+    /** 虚拟键盘练琴：是否显示底部键盘 */
+    private val _showVirtualPracticeKeyboard = MutableStateFlow(false)
+    val showVirtualPracticeKeyboard: StateFlow<Boolean> = _showVirtualPracticeKeyboard.asStateFlow()
+
+    /** 虚拟键盘练琴：MIDI 解析出的按时间顺序的音符列表，加载成功后非空 */
+    private val _virtualPracticeNotes = MutableStateFlow<List<Note>?>(null)
+    val virtualPracticeNotes: StateFlow<List<Note>?> = _virtualPracticeNotes.asStateFlow()
+
+    /** 虚拟键盘练琴：是否正在加载 MIDI 音符 */
+    private val _virtualPracticeLoading = MutableStateFlow(false)
+    val virtualPracticeLoading: StateFlow<Boolean> = _virtualPracticeLoading.asStateFlow()
 
     fun clearSnackbarMessage() { _snackbarMessage.value = null }
 
@@ -161,6 +174,48 @@ class SheetDetailViewModel @Inject constructor(
             }
         }
         return segments
+    }
+
+    /** 开始虚拟键盘练琴：加载 MIDI 并解析为按时间顺序的音符，成功后显示底部键盘 */
+    fun startVirtualPractice() {
+        val success = _state.value as? SheetDetailUiState.Success ?: run {
+            _snackbarMessage.value = "请先加载曲谱"
+            return
+        }
+        val midiUrl = success.midiUrl
+        if (midiUrl.isNullOrBlank()) {
+            _snackbarMessage.value = "该曲谱暂无 MIDI，无法使用虚拟键盘练琴"
+            return
+        }
+        viewModelScope.launch {
+            _virtualPracticeLoading.value = true
+            _virtualPracticeNotes.value = null
+            val notes = withContext(Dispatchers.IO) {
+                try {
+                    val bytes = URL(midiUrl).openStream().use { it.readBytes() }
+                    val events = MidiFileParser.parseNoteEvents(bytes)
+                    events
+                        .filter { it.isOn }
+                        .sortedBy { it.timeMs }
+                        .map { Note(it.midiNote) }
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            }
+            _virtualPracticeLoading.value = false
+            if (notes.isEmpty()) {
+                _snackbarMessage.value = "MIDI 解析无音符"
+            } else {
+                _virtualPracticeNotes.value = notes
+                _showVirtualPracticeKeyboard.value = true
+            }
+        }
+    }
+
+    /** 关闭虚拟键盘练琴（收起键盘） */
+    fun dismissVirtualPracticeKeyboard() {
+        _showVirtualPracticeKeyboard.value = false
+        _virtualPracticeNotes.value = null
     }
 
     fun loadDetail() {
