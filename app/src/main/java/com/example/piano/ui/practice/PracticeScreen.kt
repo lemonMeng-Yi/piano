@@ -27,6 +27,9 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.os.Build
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.piano.core.audio.PitchResult
 import com.example.piano.domain.practice.Note
 import com.example.piano.navigation.NavigationActions
@@ -135,7 +138,15 @@ fun PracticePage(navController: NavHostController) {
             colors = CardDefaults.cardColors(
                 containerColor = PianoTheme.colors.secondaryContainer.copy(alpha = 0.5f)
             ),
-            onClick = { navActions.navigateToPracticeFollowAlong() }
+            onClick = {
+                (context as? Activity)?.window?.decorView?.let { decorView ->
+                    ViewCompat.getWindowInsetsController(decorView)?.apply {
+                        hide(WindowInsetsCompat.Type.statusBars())
+                        systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    }
+                }
+                navActions.navigateToPracticeFollowAlong()
+            }
         ) {
             Row(
                 modifier = Modifier

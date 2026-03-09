@@ -19,7 +19,7 @@ class AuthInterceptor : Interceptor {
         // 如果存在且未过期的 Token，添加到请求头
         val newRequest = if (token != null && !TokenManager.isTokenExpired()) {
             originalRequest.newBuilder()
-                .header("Authorization", "Bearer $token")
+                .header("Cookie", "Authorization=$token")
                 .build()
         } else {
             originalRequest

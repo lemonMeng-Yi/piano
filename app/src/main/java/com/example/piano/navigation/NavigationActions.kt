@@ -95,4 +95,11 @@ class NavigationActions(private val navController: NavController) {
     fun navigateToCourseDetail(courseId: String) {
         navController.navigate("${NavRoutes.COURSE_DETAIL}/$courseId")
     }
+
+    /**
+     * 导航到曲谱详情页（显示 sheetDataUrl 图片）
+     */
+    fun navigateToSheetDetail(sheetId: Long) {
+        navController.navigate("${NavRoutes.SHEET_DETAIL}/$sheetId")
+    }
 }

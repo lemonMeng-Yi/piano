@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
@@ -25,13 +24,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -61,6 +57,7 @@ import com.example.piano.domain.practice.CoursePieces
 import com.example.piano.domain.practice.CorrectionRecord
 import com.example.piano.domain.practice.Note
 import com.example.piano.domain.practice.PracticePiece
+import com.example.piano.ui.components.BackTitleTopBar
 import com.example.piano.ui.theme.PianoTheme
 import kotlinx.coroutines.delay
 
@@ -278,18 +275,7 @@ fun FollowAlongScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("跟弹纠错") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "返回")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PianoTheme.colors.surface,
-                    titleContentColor = PianoTheme.colors.onSurface
-                )
-            )
+            BackTitleTopBar(title = "跟弹纠错", onBack = onBack)
         },
         containerColor = PianoTheme.colors.background
     ) { paddingValues ->

@@ -46,6 +46,14 @@ class CoursesViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<CoursesUiState>(CoursesUiState.Loading)
     val uiState: StateFlow<CoursesUiState> = _uiState.asStateFlow()
 
+    /** 当前选中的 Tab：0=学钢琴，1=曲谱库。存于 ViewModel 以便从详情页返回时保持选中项 */
+    private val _selectedTabIndex = MutableStateFlow(0)
+    val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
+
+    fun setSelectedTabIndex(index: Int) {
+        _selectedTabIndex.value = index.coerceIn(0, 1)
+    }
+
     init {
         loadCategories()
     }

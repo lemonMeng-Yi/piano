@@ -16,10 +16,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,9 +41,11 @@ private val TAB_TITLES = listOf("学钢琴", "曲谱库")
 fun CoursesPage(
     onPlayVideo: (String) -> Unit = {},
     onOpenCourseDetail: (String) -> Unit = {},
+    onOpenSheetDetail: (Long) -> Unit = {},
     viewModel: CoursesViewModel = hiltViewModel()
 ) {
-    var selectedTab by remember { mutableStateOf(CourseTab.LEARN_PIANO) }
+    val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
+    val selectedTab = CourseTab.entries[selectedTabIndex.coerceIn(0, CourseTab.entries.size - 1)]
 
     Column(modifier = Modifier.fillMaxSize()) {
         // 顶部：学钢琴 | 曲谱库
@@ -64,7 +65,7 @@ fun CoursesPage(
                         modifier = Modifier.clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
-                        ) { selectedTab = tab }
+                        ) { viewModel.setSelectedTabIndex(index) }
                     ) {
                         Text(
                             text = title,
@@ -93,7 +94,7 @@ fun CoursesPage(
                 onPlayVideo = onPlayVideo,
                 onOpenCourseDetail = onOpenCourseDetail
             )
-            CourseTab.MUSIC_LIBRARY -> MusicLibraryContent()
+            CourseTab.MUSIC_LIBRARY -> MusicLibraryContent(onOpenSheetDetail = onOpenSheetDetail)
         }
     }
 }

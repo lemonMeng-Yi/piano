@@ -83,4 +83,7 @@ dependencies {
     // Media3 ExoPlayer：课程视频应用内全屏播放（CourseVideoScreen）
     implementation "androidx.media3:media3-exoplayer:1.4.1"
     implementation "androidx.media3:media3-ui:1.4.1"
+
+    // Coil 图片加载（曲谱列表预览图）
+    implementation libs.coil.compose
 }

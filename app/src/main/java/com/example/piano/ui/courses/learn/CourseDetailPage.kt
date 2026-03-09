@@ -11,25 +11,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -45,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.piano.ui.components.BackTitleTopBar
 import com.example.piano.ui.theme.PianoTheme
 
 @Composable
@@ -125,7 +119,6 @@ private fun LessonCard(
  * 课程详情页：展示该课程下的子课时卡片，点击卡片播放视频
  * 数据来自 GET /course/categories，按 categoryId 取对应大模块下的小模块列表
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CourseDetailPage(
     onBack: () -> Unit,
@@ -148,32 +141,12 @@ fun CourseDetailPage(
 
     Scaffold(
         topBar = {
-            Surface(color = PianoTheme.colors.surface) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = "返回",
-                                tint = PianoTheme.colors.onSurface
-                            )
-                        }
-                        Text(
-                            text = title.ifEmpty { "课程详情" },
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = PianoTheme.colors.onSurface
-                        )
-                    }
-                }
-            }
-        }
+            BackTitleTopBar(
+                title = title.ifEmpty { "课程详情" },
+                onBack = onBack
+            )
+        },
+        containerColor = PianoTheme.colors.surface
     ) { paddingValues ->
         Column(
             modifier = Modifier

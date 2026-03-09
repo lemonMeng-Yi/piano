@@ -25,4 +25,7 @@ object NavRoutes {
 
     /** 课程详情页（子课时列表），路径参数：course_detail/{courseId} */
     const val COURSE_DETAIL = "course_detail"
+
+    /** 曲谱详情页（sheetDataUrl 图片），路径参数：sheet_detail/{sheetId} */
+    const val SHEET_DETAIL = "sheet_detail"
 }
