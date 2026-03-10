@@ -80,6 +80,19 @@ fun LearnPianoContent(
                     .padding(horizontal = 16.dp)
             ) {
                 Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    text = "学钢琴",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PianoTheme.colors.onSurface,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Text(
+                    text = "系统化学习，循序渐进",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = PianoTheme.colors.onSurface.copy(alpha = 0.65f),
+                    modifier = Modifier.padding(bottom = 20.dp)
+                )
                 state.categories.forEachIndexed { index, category ->
                     val (cardColor, accentColor, contentColor) = CARD_COLORS[index % CARD_COLORS.size]
                     CourseCard(

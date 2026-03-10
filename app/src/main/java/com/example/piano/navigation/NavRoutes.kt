@@ -17,6 +17,8 @@ object NavRoutes {
     const val HOME = "home"
     const val PRACTICE = "practice"
     const val PRACTICE_FOLLOW_ALONG = "practice_follow_along"
+    /** 陪练（曲谱库） */
+    const val ACCOMPANY = "accompany"
     const val COURSES = "courses"
     const val PROFILE = "profile"
     const val PROFILE_EDIT = "profile_edit"

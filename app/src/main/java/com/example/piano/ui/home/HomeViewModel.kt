@@ -52,7 +52,7 @@ class HomeViewModel @Inject constructor(
     fun loadRecentPlays() {
         viewModelScope.launch {
             _recentPlaysState.value = RecentPlaysUiState.Loading
-            when (val result = sheetRepository.listRecentPlays(limit = 20)) {
+            when (val result = sheetRepository.listRecentPlays(limit = 3)) {
                 is ResponseState.Success ->
                     _recentPlaysState.value = RecentPlaysUiState.Success(result.body)
                 is ResponseState.NetworkError -> {

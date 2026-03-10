@@ -18,11 +18,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.piano.core.manager.LocalThemeManager
-import com.example.piano.core.manager.ThemeManager
 import com.example.piano.data.auth.api.response.ProfileDTO
 import com.example.piano.ui.auth.viewmodel.AuthViewModel
 import com.example.piano.ui.components.SnackBarManager
@@ -76,67 +76,23 @@ fun ProfilePage(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = profile?.displayName()?.ifBlank { "—" } ?: profile?.username?.ifBlank { "—" } ?: if (profileLoading) "加载中..." else "—",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = profile?.email?.takeIf { it.isNotBlank() } ?: "邮箱未绑定",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
                         color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
                         modifier = Modifier.padding(top = 4.dp)
                     )
-                    Row(
-                        modifier = Modifier.padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        AssistChip(
-                            onClick = { },
-                            label = { Text("中级学员") },
-                            colors = AssistChipDefaults.assistChipColors(
-                                containerColor = PianoTheme.colors.primary.copy(alpha = 0.2f),
-                                labelColor = PianoTheme.colors.primary
-                            )
-                        )
-                        AssistChip(
-                            onClick = { },
-                            label = { Text("Lv. 12") }
-                        )
-                    }
                 }
             }
-        }
-
-        // Stats Overview
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            ProfileStatCard(
-                modifier = Modifier.weight(1f),
-                value = "24",
-                label = "练习天数",
-                valueColor = PianoTheme.colors.primary
-            )
-            ProfileStatCard(
-                modifier = Modifier.weight(1f),
-                value = "12",
-                label = "完成曲目",
-                valueColor = PianoTheme.colors.secondary
-            )
-            ProfileStatCard(
-                modifier = Modifier.weight(1f),
-                value = "8",
-                label = "获得徽章",
-                valueColor = PianoTheme.colors.onSurface
-            )
         }
 
         // Settings Section
         Text(
             text = "设置",
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp),
             fontWeight = FontWeight.SemiBold,
             color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
@@ -176,7 +132,7 @@ fun ProfilePage(
         // Support Section
         Text(
             text = "支持",
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp),
             fontWeight = FontWeight.SemiBold,
             color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
@@ -212,26 +168,6 @@ fun ProfilePage(
                     showDivider = false
                 )
             }
-        }
-
-        // App Info
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "AI Piano Practice v1.0.0",
-                style = MaterialTheme.typography.bodySmall,
-                color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
-            )
-            Text(
-                text = "© 2025 智能钢琴陪练平台",
-                style = MaterialTheme.typography.bodySmall,
-                color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
-                modifier = Modifier.padding(top = 4.dp)
-            )
         }
     }
 }
@@ -279,36 +215,6 @@ private fun ProfileAvatar(
 }
 
 @Composable
-fun ProfileStatCard(
-    modifier: Modifier = Modifier,
-    value: String,
-    label: String,
-    valueColor: Color
-) {
-    Card(modifier = modifier) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = valueColor
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
-                modifier = Modifier.padding(top = 4.dp)
-            )
-        }
-    }
-}
-
-@Composable
 fun SettingsItem(
     icon: ImageVector,
     label: String,
@@ -346,7 +252,7 @@ fun SettingsItem(
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.weight(1f)
                 )

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Piano
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import com.example.piano.ui.theme.PianoTheme
@@ -29,6 +30,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.piano.ui.home.screen.HomePage
+import com.example.piano.ui.courses.AccompanimentPage
 import com.example.piano.ui.courses.learn.CourseDetailPage
 import com.example.piano.ui.courses.learn.CourseVideoScreen
 import com.example.piano.ui.courses.learn.CourseVideoViewModel
@@ -93,6 +95,12 @@ fun MainNavHost(
                     onClick = { navigationActions.navigateToPractice() }
                 )
                 NavigationBarItem(
+                    icon = { Icon(Icons.Outlined.Piano, contentDescription = "陪练") },
+                    label = { Text("陪练") },
+                    selected = currentRoute == NavRoutes.ACCOMPANY,
+                    onClick = { navigationActions.navigateToAccompany() }
+                )
+                NavigationBarItem(
                     icon = { Icon(Icons.Default.MenuBook, contentDescription = "课程") },
                     label = { Text("课程") },
                     selected = currentRoute == NavRoutes.COURSES,
@@ -127,7 +135,7 @@ fun MainNavHost(
                     }
                     HomePage(
                         onOpenSheetDetail = { navigationActions.navigateToSheetDetail(it) },
-                        onNavigateToCourses = { navigationActions.navigateToCourses() },
+                        onNavigateToCourses = { navigationActions.navigateToAccompany() },
                         onNavigateToLogin = onLogout,
                         refreshTrigger = refreshTrigger
                     )
@@ -139,12 +147,16 @@ fun MainNavHost(
                 composable(NavRoutes.PRACTICE_FOLLOW_ALONG) {
                     FollowAlongEntry(pieceId = null, onBack = { navController.popBackStack() })
                 }
+                composable(NavRoutes.ACCOMPANY) {
+                    AccompanimentPage(
+                        onOpenSheetDetail = { navigationActions.navigateToSheetDetail(it) },
+                        onNavigateToLogin = onLogout
+                    )
+                }
                 composable(NavRoutes.COURSES) {
                     CoursesPage(
                         onPlayVideo = { navigationActions.navigateToCourseVideo(it) },
-                        onOpenCourseDetail = { navigationActions.navigateToCourseDetail(it) },
-                        onOpenSheetDetail = { navigationActions.navigateToSheetDetail(it) },
-                        onNavigateToLogin = onLogout
+                        onOpenCourseDetail = { navigationActions.navigateToCourseDetail(it) }
                     )
                 }
                 composable(

@@ -68,7 +68,14 @@ class NavigationActions(private val navController: NavController) {
     }
 
     /**
-     * 导航到课程页面
+     * 导航到陪练页面（曲谱库）
+     */
+    fun navigateToAccompany() {
+        navController.navigate(NavRoutes.ACCOMPANY)
+    }
+
+    /**
+     * 导航到课程页面（学钢琴）
      */
     fun navigateToCourses() {
         navController.navigate(NavRoutes.COURSES)
