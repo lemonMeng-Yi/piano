@@ -1,5 +1,21 @@
 package com.example.piano.ui.courses.sheet
 
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
+import android.bluetooth.le.BluetoothLeScanner
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanFilter
+import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.media.midi.MidiManager
+import android.os.Build
+import android.os.ParcelUuid
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,15 +23,23 @@ import com.example.piano.core.audio.SheetAudioPlaybackManager
 import com.example.piano.core.audio.AudioPitchCapture
 import com.example.piano.core.audio.PitchResult
 import com.example.piano.core.midi.MidiFileParser
+import com.example.piano.core.midi.MidiPitchSource
 import com.example.piano.core.network.util.ResponseState
 import com.example.piano.domain.practice.Note
 import com.example.piano.domain.sheet.repository.SheetRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URL
@@ -35,9 +59,11 @@ sealed class SheetDetailUiState {
     data class Error(val message: String) : SheetDetailUiState()
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class SheetDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    @ApplicationContext private val context: Context,
     private val sheetRepository: SheetRepository,
     private val audioPlayback: SheetAudioPlaybackManager
 ) : ViewModel() {
@@ -220,6 +246,236 @@ class SheetDetailViewModel @Inject constructor(
         _virtualPracticeNotes.value = null
     }
 
+    // ---------- 蓝牙 MIDI 练琴（参照 PracticeViewModel 的连接逻辑） ----------
+
+    private val midiManager = context.getSystemService(Context.MIDI_SERVICE) as? MidiManager
+    private val _midiPitchSourceHolder = MutableStateFlow(midiManager?.let { MidiPitchSource(it) })
+    private val midiPitchSource: MidiPitchSource? get() = _midiPitchSourceHolder.value
+    private val bluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
+
+    private val _bluetoothEnabled = MutableStateFlow(bluetoothAdapter?.isEnabled == true)
+    val bluetoothEnabled: StateFlow<Boolean> = _bluetoothEnabled.asStateFlow()
+
+    private var bluetoothStateReceiver: BroadcastReceiver? = null
+
+    private val _scannedBleMidiDevices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
+    val scannedBleMidiDevices: StateFlow<List<BluetoothDevice>> = _scannedBleMidiDevices.asStateFlow()
+
+    private val _isScanningBle = MutableStateFlow(false)
+    val isScanningBle: StateFlow<Boolean> = _isScanningBle.asStateFlow()
+
+    private val _midiConnected = MutableStateFlow(false)
+    val midiConnected: StateFlow<Boolean> = _midiConnected.asStateFlow()
+
+    /** 当前已连接的蓝牙 MIDI 设备（用于弹窗中显示「已连接」） */
+    private val _connectedBluetoothDevice = MutableStateFlow<BluetoothDevice?>(null)
+    val connectedBluetoothDevice: StateFlow<BluetoothDevice?> = _connectedBluetoothDevice.asStateFlow()
+
+    private val _midiConnectionError = MutableStateFlow<String?>(null)
+    val midiConnectionError: StateFlow<String?> = _midiConnectionError.asStateFlow()
+
+    /** 蓝牙练琴：是否显示底部键盘 */
+    private val _showBluetoothPracticeKeyboard = MutableStateFlow(false)
+    val showBluetoothPracticeKeyboard: StateFlow<Boolean> = _showBluetoothPracticeKeyboard.asStateFlow()
+
+    /** 蓝牙练琴：连接后加载的 MIDI 音符列表 */
+    private val _bluetoothPracticeNotes = MutableStateFlow<List<Note>?>(null)
+    val bluetoothPracticeNotes: StateFlow<List<Note>?> = _bluetoothPracticeNotes.asStateFlow()
+
+    private val _bluetoothPracticeLoading = MutableStateFlow(false)
+    val bluetoothPracticeLoading: StateFlow<Boolean> = _bluetoothPracticeLoading.asStateFlow()
+
+    /** 蓝牙练琴时当前 MIDI 输入音高（仅连接且显示键盘时有值） */
+    val bluetoothPracticeCurrentPitch: StateFlow<PitchResult?> = combine(
+        _showBluetoothPracticeKeyboard,
+        _midiConnected,
+        _midiPitchSourceHolder.flatMapLatest { it?.currentPitch ?: flowOf(null) }
+    ) { show, connected, pitch ->
+        if (show && connected) pitch else null
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    val isMidiSupported: Boolean = midiManager != null
+
+    init {
+        bluetoothStateReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
+                    val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF)
+                    val enabled = state == BluetoothAdapter.STATE_ON
+                    _bluetoothEnabled.value = enabled
+                    if (!enabled) onBluetoothTurnedOff()
+                }
+            }
+        }
+        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(bluetoothStateReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("DEPRECATION")
+            context.registerReceiver(bluetoothStateReceiver, filter)
+        }
+    }
+
+    private fun onBluetoothTurnedOff() {
+        midiPitchSource?.disconnect()
+        _midiConnected.value = false
+        _connectedBluetoothDevice.value = null
+        _midiConnectionError.value = null
+        stopBleMidiScan()
+        _scannedBleMidiDevices.value = emptyList()
+        _midiPitchSourceHolder.value = midiManager?.let { MidiPitchSource(it) }
+    }
+
+    fun isBluetoothEnabled(): Boolean = _bluetoothEnabled.value
+
+    @SuppressLint("MissingPermission")
+    fun startBleMidiScan() {
+        val scanner: BluetoothLeScanner? = bluetoothAdapter?.bluetoothLeScanner
+        if (scanner == null) return
+        if (_isScanningBle.value) return
+        _scannedBleMidiDevices.value = emptyList()
+        _isScanningBle.value = true
+        val filter = ScanFilter.Builder()
+            .setServiceUuid(ParcelUuid.fromString("03B80E5A-EDE8-4B33-A751-6CE34EC4C700"))
+            .build()
+        val settings = ScanSettings.Builder()
+            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+            .build()
+        val callback = object : ScanCallback() {
+            override fun onScanResult(callbackType: Int, result: ScanResult) {
+                viewModelScope.launch(Dispatchers.Main.immediate) {
+                    val device = result.device
+                    val current = _scannedBleMidiDevices.value
+                    if (current.any { it.address == device.address }) return@launch
+                    _scannedBleMidiDevices.value = current + device
+                }
+            }
+            override fun onScanFailed(errorCode: Int) {
+                viewModelScope.launch(Dispatchers.Main.immediate) {
+                    _isScanningBle.value = false
+                }
+            }
+        }
+        bleScanCallback = callback
+        try {
+            scanner.startScan(listOf(filter), settings, callback)
+        } catch (e: SecurityException) {
+            _isScanningBle.value = false
+            bleScanCallback = null
+            return
+        }
+        viewModelScope.launch {
+            delay(12_000)
+            stopBleMidiScan()
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun stopBleMidiScan() {
+        val cb = bleScanCallback ?: run {
+            _isScanningBle.value = false
+            return
+        }
+        bleScanCallback = null
+        try {
+            bluetoothAdapter?.bluetoothLeScanner?.stopScan(cb)
+        } catch (_: Exception) { }
+        _isScanningBle.value = false
+    }
+
+    private var bleScanCallback: ScanCallback? = null
+
+    fun getBluetoothDeviceDisplayName(device: BluetoothDevice): String {
+        val name = device.name?.takeIf { it.isNotBlank() }
+        return name ?: device.address
+    }
+
+    fun connectBluetoothMidi(device: BluetoothDevice) {
+        midiPitchSource?.connectBluetooth(
+            device,
+            onConnected = {
+                _midiConnected.value = true
+                _connectedBluetoothDevice.value = device
+                _midiConnectionError.value = null
+                loadBluetoothPracticeNotesIfNeeded()
+            },
+            onError = {
+                _midiConnected.value = false
+                _connectedBluetoothDevice.value = null
+                _midiConnectionError.value = it
+            }
+        ) ?: run {
+            _midiConnectionError.value = "设备不支持 MIDI"
+        }
+    }
+
+    fun disconnectMidi() {
+        midiPitchSource?.disconnect()
+        _midiConnected.value = false
+        _connectedBluetoothDevice.value = null
+        _midiConnectionError.value = null
+    }
+
+    fun clearMidiError() {
+        _midiConnectionError.value = null
+    }
+
+    /** 蓝牙练琴：显示键盘（连接后在 onConnected 里加载 MIDI）；若已连接则立即触发加载 */
+    fun startBluetoothPractice() {
+        val success = _state.value as? SheetDetailUiState.Success ?: run {
+            _snackbarMessage.value = "请先加载曲谱"
+            return
+        }
+        if (success.midiUrl.isNullOrBlank()) {
+            _snackbarMessage.value = "该曲谱暂无 MIDI，无法使用蓝牙 MIDI 练琴"
+            return
+        }
+        if (!isMidiSupported) {
+            _snackbarMessage.value = "当前设备不支持 MIDI"
+            return
+        }
+        _showBluetoothPracticeKeyboard.value = true
+        _bluetoothPracticeNotes.value = null
+        if (_midiConnected.value) loadBluetoothPracticeNotesIfNeeded()
+    }
+
+    /** 连接成功后若正在蓝牙练琴则加载 MIDI 音符 */
+    private fun loadBluetoothPracticeNotesIfNeeded() {
+        if (!_showBluetoothPracticeKeyboard.value || !_midiConnected.value) return
+        if (_bluetoothPracticeNotes.value != null) return
+        val success = _state.value as? SheetDetailUiState.Success ?: return
+        val midiUrl = success.midiUrl ?: return
+        viewModelScope.launch {
+            _bluetoothPracticeLoading.value = true
+            val notes = withContext(Dispatchers.IO) {
+                try {
+                    val bytes = URL(midiUrl).openStream().use { it.readBytes() }
+                    val events = MidiFileParser.parseNoteEvents(bytes)
+                    events
+                        .filter { it.isOn }
+                        .sortedBy { it.timeMs }
+                        .map { Note(it.midiNote) }
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            }
+            _bluetoothPracticeLoading.value = false
+            if (notes.isNotEmpty()) {
+                _bluetoothPracticeNotes.value = notes
+            } else {
+                _snackbarMessage.value = "MIDI 解析无音符"
+            }
+        }
+    }
+
+    fun dismissBluetoothPracticeKeyboard() {
+        disconnectMidi()
+        stopBleMidiScan()
+        _showBluetoothPracticeKeyboard.value = false
+        _bluetoothPracticeNotes.value = null
+        _connectedBluetoothDevice.value = null
+    }
+
     // ---------- 声音识别练琴（麦克风识别，逻辑同跟弹） ----------
 
     private val audioPitchCapture = AudioPitchCapture()
@@ -305,6 +561,14 @@ class SheetDetailViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         audioPitchCapture.stopCapture()
+        bluetoothStateReceiver?.let {
+            try {
+                context.unregisterReceiver(it)
+            } catch (_: Exception) { }
+        }
+        bluetoothStateReceiver = null
+        stopBleMidiScan()
+        midiPitchSource?.disconnect()
     }
 
     fun loadDetail() {

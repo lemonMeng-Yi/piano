@@ -3,6 +3,10 @@ package com.example.piano.ui.courses.sheet
 import android.content.pm.PackageManager
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
+import android.os.Build
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -197,7 +201,60 @@ fun SheetDetailScreen(
     val soundPracticeLoading by viewModel.soundPracticeLoading.collectAsState()
     val soundPracticeCurrentPitch by viewModel.soundPracticeCurrentPitch.collectAsState()
     val soundPracticeRecording by viewModel.soundPracticeRecording.collectAsState()
+    val showBluetoothPracticeKeyboard by viewModel.showBluetoothPracticeKeyboard.collectAsState()
+    val bluetoothPracticeNotes by viewModel.bluetoothPracticeNotes.collectAsState()
+    val bluetoothPracticeLoading by viewModel.bluetoothPracticeLoading.collectAsState()
+    val bluetoothPracticeCurrentPitch by viewModel.bluetoothPracticeCurrentPitch.collectAsState()
+    val midiConnected by viewModel.midiConnected.collectAsState()
+    val scannedBleMidiDevices by viewModel.scannedBleMidiDevices.collectAsState()
+    val isScanningBle by viewModel.isScanningBle.collectAsState()
+    val isBluetoothEnabled by viewModel.bluetoothEnabled.collectAsState()
+    val midiConnectionError by viewModel.midiConnectionError.collectAsState()
+    val isMidiSupported = viewModel.isMidiSupported
     val context = LocalContext.current
+
+    /** 选择蓝牙 MIDI 时先弹出「蓝牙MIDI设备」弹窗，连接成功后再关闭弹窗并弹出键盘 */
+    var showBluetoothMidiDialog by remember { mutableStateOf(false) }
+    LaunchedEffect(showBluetoothMidiDialog, midiConnected) {
+        if (showBluetoothMidiDialog && midiConnected) {
+            showBluetoothMidiDialog = false
+            viewModel.startBluetoothPractice()
+        }
+    }
+
+    val connectedBluetoothDevice by viewModel.connectedBluetoothDevice.collectAsState()
+
+    /** 蓝牙扫描权限与打开蓝牙（参照 FollowAlongScreen） */
+    val scanPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        if (grants.values.all { it }) viewModel.startBleMidiScan()
+    }
+    fun doPermissionAndStartScan() {
+        val permissions = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED)
+                permissions.add(Manifest.permission.BLUETOOTH_SCAN)
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED)
+                permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+        }
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (permissions.isEmpty()) viewModel.startBleMidiScan()
+        else scanPermissionLauncher.launch(permissions.toTypedArray())
+    }
+    val bluetoothEnableLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) doPermissionAndStartScan()
+    }
+    fun ensureScanPermissionAndStartScan() {
+        if (!viewModel.isBluetoothEnabled()) {
+            bluetoothEnableLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+            return
+        }
+        doPermissionAndStartScan()
+    }
 
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let { msg ->
@@ -425,6 +482,27 @@ fun SheetDetailScreen(
                 }
             }
 
+            if (showBluetoothPracticeKeyboard && bluetoothPracticeLoading) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .background(PianoTheme.colors.surface)
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "正在加载 MIDI…",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = PianoTheme.colors.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = PianoTheme.colors.primary
+                    )
+                }
+            }
+
             if (showSoundPractice) {
                 val notes = soundNotes!!
                 var currentIndex by remember(notes) { mutableStateOf(0) }
@@ -621,6 +699,262 @@ fun SheetDetailScreen(
                                         onClick = {
                                             showResultDialog = false
                                             viewModel.dismissSoundPracticeKeyboard()
+                                        }
+                                    ) {
+                                        Text("关闭")
+                                    }
+                                }
+                            }
+                        }
+                }
+            }
+            }
+
+            if (showBluetoothPracticeKeyboard) {
+                val btNotes = bluetoothPracticeNotes
+                var btCurrentIndex by remember(btNotes) { mutableStateOf(0) }
+                val btRecords = remember(btNotes) { mutableStateListOf<com.example.piano.domain.practice.CorrectionRecord>() }
+                var btWrongMidi by remember { mutableStateOf<Int?>(null) }
+                var btCorrectMidi by remember { mutableStateOf<Int?>(null) }
+                var btFinished by remember { mutableStateOf(false) }
+                var btShowResultDialog by remember { mutableStateOf(false) }
+                var btHasAdvanced by remember { mutableStateOf(false) }
+                var btLastRecordedWrong by remember { mutableStateOf<Int?>(null) }
+
+                if (btNotes != null) {
+                    LaunchedEffect(btCurrentIndex) {
+                        btHasAdvanced = false
+                        btLastRecordedWrong = null
+                    }
+                    LaunchedEffect(bluetoothPracticeCurrentPitch, btCurrentIndex, btFinished) {
+                        if (btFinished) return@LaunchedEffect
+                        val pitch = bluetoothPracticeCurrentPitch as? PitchResult.Pitch ?: return@LaunchedEffect
+                        val expected = btNotes.getOrNull(btCurrentIndex) ?: return@LaunchedEffect
+                        if (pitch.note.midi == expected.midi) {
+                            if (btHasAdvanced) return@LaunchedEffect
+                            btHasAdvanced = true
+                            btWrongMidi = null
+                            btCorrectMidi = expected.midi
+                            btRecords.add(
+                                com.example.piano.domain.practice.CorrectionRecord(
+                                    index = btCurrentIndex,
+                                    expected = expected,
+                                    actual = pitch.note,
+                                    isCorrect = true
+                                )
+                            )
+                            btCurrentIndex++
+                            if (btCurrentIndex >= btNotes.size) {
+                                btFinished = true
+                                btShowResultDialog = true
+                            }
+                        } else {
+                            val prevNote = btNotes.getOrNull(btCurrentIndex - 1)
+                            if (btCurrentIndex > 0 && pitch.note.midi == prevNote?.midi) return@LaunchedEffect
+                            btWrongMidi = pitch.note.midi
+                            if (pitch.note.midi == btLastRecordedWrong) return@LaunchedEffect
+                            btLastRecordedWrong = pitch.note.midi
+                            btRecords.add(
+                                com.example.piano.domain.practice.CorrectionRecord(
+                                    index = btCurrentIndex,
+                                    expected = expected,
+                                    actual = pitch.note,
+                                    isCorrect = false
+                                )
+                            )
+                        }
+                    }
+                    LaunchedEffect(btWrongMidi) {
+                        if (btWrongMidi != null) {
+                            delay(400)
+                            btWrongMidi = null
+                        }
+                    }
+                    LaunchedEffect(btCorrectMidi) {
+                        if (btCorrectMidi != null) {
+                            delay(350)
+                            btCorrectMidi = null
+                        }
+                    }
+                }
+
+                val keyboardHeightDp = rememberPianoKeyboardBottomHeight()
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .background(PianoTheme.colors.surface)
+                        .padding(horizontal = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(
+                            onClick = {
+                                btFinished = true
+                                btShowResultDialog = true
+                            }
+                        ) {
+                            Text("提前结束", style = MaterialTheme.typography.bodyMedium)
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "蓝牙MIDI练琴",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = PianoTheme.colors.onSurface
+                        )
+                        IconButton(onClick = { viewModel.dismissBluetoothPracticeKeyboard() }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Close,
+                                contentDescription = "收起键盘",
+                                tint = PianoTheme.colors.onSurface
+                            )
+                        }
+                    }
+                    if (!midiConnected) {
+                        Column(Modifier.padding(vertical = 8.dp)) {
+                            if (!isMidiSupported) {
+                                Text(
+                                    text = "当前设备不支持 MIDI",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PianoTheme.colors.error
+                                )
+                            } else {
+                                if (!isBluetoothEnabled) {
+                                    Text(
+                                        text = "请先打开手机蓝牙",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = PianoTheme.colors.error
+                                    )
+                                }
+                                Button(
+                                    onClick = { ensureScanPermissionAndStartScan() },
+                                    enabled = !isScanningBle
+                                ) {
+                                    Text(if (isScanningBle) "扫描中…" else "扫描蓝牙 MIDI 设备")
+                                }
+                                midiConnectionError?.let { err ->
+                                    Text(
+                                        text = err,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = PianoTheme.colors.error,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                    TextButton(onClick = { viewModel.clearMidiError() }) { Text("清除") }
+                                }
+                                if (scannedBleMidiDevices.isEmpty() && !isScanningBle && isBluetoothEnabled) {
+                                    Text(
+                                        text = "打开电钢蓝牙后点击「扫描蓝牙 MIDI 设备」，再在列表中点击设备连接",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                } else if (scannedBleMidiDevices.isNotEmpty()) {
+                                    Text(
+                                        text = "点击设备连接",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+                                    scannedBleMidiDevices.forEach { device ->
+                                        TextButton(onClick = { viewModel.connectBluetoothMidi(device) }) {
+                                            Text(viewModel.getBluetoothDeviceDisplayName(device))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else if (btNotes == null) {
+                        Text(
+                            text = "已连接，正在加载 MIDI…",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                    Full88PianoKeyboard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(keyboardHeightDp),
+                        highlightMidi = btNotes?.getOrNull(btCurrentIndex)?.midi,
+                        wrongMidi = btWrongMidi,
+                        correctMidi = btCorrectMidi,
+                        showOctaveLabels = true,
+                        onKeyPress = { }
+                    )
+                }
+
+                if (btNotes != null && btShowResultDialog) {
+                    val total = btNotes.size
+                    val playedCount = btCurrentIndex
+                    val wrongCount = btRecords.filter { !it.isCorrect }.map { it.index }.toSet().size
+                    val progressPercent = if (total > 0) playedCount * 100 / total else 0
+                    val accuracyPercent = if (playedCount > 0) (playedCount - wrongCount) * 100 / playedCount else 100
+                    Dialog(onDismissRequest = { }) {
+                        Card(
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = PianoTheme.colors.surface),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(Modifier.padding(24.dp)) {
+                                Text(
+                                    text = "练习结果",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "进度：已弹 $playedCount / 总 $total 个音（$progressPercent%）",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = PianoTheme.colors.onSurface,
+                                    modifier = Modifier.padding(top = 12.dp)
+                                )
+                                if (playedCount > 0) {
+                                    Text(
+                                        text = "正确率（按已弹数量）：$accuracyPercent%",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = PianoTheme.colors.primary,
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+                                } else {
+                                    Text(
+                                        text = "尚未弹奏，无正确率",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+                                }
+                                if (wrongCount > 0) {
+                                    Text(
+                                        text = "错了 $wrongCount 个音",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = PianoTheme.colors.onSurface.copy(alpha = 0.8f),
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 20.dp),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            btShowResultDialog = false
+                                            btCurrentIndex = 0
+                                            btRecords.clear()
+                                            btWrongMidi = null
+                                            btCorrectMidi = null
+                                            btFinished = false
+                                        }
+                                    ) {
+                                        Text("再来一次")
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Button(
+                                        onClick = {
+                                            btShowResultDialog = false
+                                            viewModel.dismissBluetoothPracticeKeyboard()
                                         }
                                     ) {
                                         Text("关闭")
@@ -862,10 +1196,24 @@ fun SheetDetailScreen(
                         pendingSoundPermissionRequest = true
                     }
                     PracticeMethod.BLUETOOTH_MIDI -> {
-                        // TODO: 跳转对应陪练页
+                        showPracticeMethodDialog = false
+                        showBluetoothMidiDialog = true
                     }
                 }
             }
+        )
+    }
+
+    if (showBluetoothMidiDialog) {
+        BluetoothMidiDeviceDialog(
+            onDismiss = { showBluetoothMidiDialog = false },
+            scannedDevices = scannedBleMidiDevices,
+            isScanning = isScanningBle,
+            isBluetoothEnabled = isBluetoothEnabled,
+            connectedDevice = connectedBluetoothDevice,
+            getDeviceDisplayName = viewModel::getBluetoothDeviceDisplayName,
+            onScanClick = { ensureScanPermissionAndStartScan() },
+            onDeviceClick = { viewModel.connectBluetoothMidi(it) }
         )
     }
 }
