@@ -721,6 +721,10 @@ fun SheetDetailScreen(
                 var btHasAdvanced by remember { mutableStateOf(false) }
                 var btLastRecordedWrong by remember { mutableStateOf<Int?>(null) }
 
+                DisposableEffect(Unit) {
+                    onDispose { viewModel.dismissBluetoothPracticeKeyboard() }
+                }
+
                 if (btNotes != null) {
                     LaunchedEffect(btCurrentIndex) {
                         btHasAdvanced = false
@@ -1206,7 +1210,10 @@ fun SheetDetailScreen(
 
     if (showBluetoothMidiDialog) {
         BluetoothMidiDeviceDialog(
-            onDismiss = { showBluetoothMidiDialog = false },
+            onDismiss = {
+                showBluetoothMidiDialog = false
+                viewModel.stopBleMidiScan()
+            },
             scannedDevices = scannedBleMidiDevices,
             isScanning = isScanningBle,
             isBluetoothEnabled = isBluetoothEnabled,

@@ -51,6 +51,12 @@ class MidiPitchSource(
                 handler.post { onError("无法打开蓝牙 MIDI 设备") }
                 return@openBluetoothDevice
             }
+            val info = openedDevice.info
+            if (info == null) {
+                try { openedDevice.close() } catch (_: Exception) { }
+                handler.post { onError("无法获取设备信息") }
+                return@openBluetoothDevice
+            }
             device = openedDevice
             val onNote: (Int, Int, Boolean) -> Unit = { note, velocity, isOn ->
                 handler.post {
@@ -65,7 +71,7 @@ class MidiPitchSource(
                     _currentNotes.value = heldNotes.toSet()
                 }
             }
-            val portCount = openedDevice.info.outputPortCount
+            val portCount = info.outputPortCount
             for (idx in 0 until portCount) {
                 val port = openedDevice.openOutputPort(idx) ?: continue
                 val receiver = MidiNoteReceiver(onNote)

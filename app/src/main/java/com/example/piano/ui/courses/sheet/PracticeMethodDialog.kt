@@ -58,7 +58,7 @@ fun PracticeMethodDialog(
             Box(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "选择练琴方式",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     color = PianoTheme.colors.onSurface,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -140,7 +140,7 @@ fun BluetoothMidiDeviceDialog(
             Box(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "蓝牙MIDI设备",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     color = PianoTheme.colors.onSurface,
                     modifier = Modifier
                         .fillMaxWidth()
