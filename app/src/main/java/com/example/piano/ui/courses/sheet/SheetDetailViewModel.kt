@@ -590,6 +590,10 @@ class SheetDetailViewModel @Inject constructor(
                         favorited = dto.favorited
                     )
                     _favorited.value = dto.favorited
+                    // 记录播放/练习（需登录，失败不影响当前页）
+                    viewModelScope.launch {
+                        sheetRepository.recordPlay(sheetId)
+                    }
                 }
                 is ResponseState.NetworkError -> _state.value = SheetDetailUiState.Error(result.msg)
                 is ResponseState.UnknownError -> _state.value = SheetDetailUiState.Error(

@@ -2,11 +2,13 @@ package com.example.piano.data.sheet.api
 
 import com.example.piano.core.network.model.BaseResult
 import com.example.piano.data.sheet.api.dto.SheetItemDTO
+import com.example.piano.data.sheet.api.dto.SheetPlayRecordDTO
 import retrofit2.Response
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
  * 曲谱库 API
@@ -47,4 +49,18 @@ interface SheetApi {
      */
     @DELETE("sheets/{id}/favorite/cancel")
     suspend fun removeFavorite(@Path("id") id: Long): Response<BaseResult<Unit>>
+
+    /**
+     * 记录播放/练习（用户练习某曲谱时调用，需登录）
+     * POST /sheets/{id}/play
+     */
+    @POST("sheets/{id}/play")
+    suspend fun recordPlay(@Path("id") id: Long): Response<BaseResult<Unit>>
+
+    /**
+     * 最近练习记录（需登录），按播放时间倒序
+     * GET /sheets/plays/recent?limit=20
+     */
+    @GET("sheets/plays/recent")
+    suspend fun recentPlays(@Query("limit") limit: Int = 20): Response<BaseResult<List<SheetPlayRecordDTO>>>
 }

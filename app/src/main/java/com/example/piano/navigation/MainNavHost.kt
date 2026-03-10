@@ -15,7 +15,11 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -109,7 +113,22 @@ fun MainNavHost(
                 startDestination = NavRoutes.HOME
             ) {
                 composable(NavRoutes.HOME) {
-                    HomePage()
+                    val homeBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentRoute = homeBackStackEntry?.destination?.route
+                    var refreshTrigger by remember { mutableStateOf(0) }
+                    var prevRoute by remember { mutableStateOf<String?>(null) }
+                    LaunchedEffect(currentRoute) {
+                        if (currentRoute == NavRoutes.HOME && prevRoute != NavRoutes.HOME) {
+                            refreshTrigger++
+                        }
+                        prevRoute = currentRoute
+                    }
+                    HomePage(
+                        onOpenSheetDetail = { navigationActions.navigateToSheetDetail(it) },
+                        onNavigateToCourses = { navigationActions.navigateToCourses() },
+                        onNavigateToLogin = onLogout,
+                        refreshTrigger = refreshTrigger
+                    )
                 }
                 
                 composable(NavRoutes.PRACTICE) {
