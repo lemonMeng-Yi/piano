@@ -24,3 +24,14 @@ data class ForgotPasswordRequest(
     val username: String,
     val password: String
 )
+
+/**
+ * 更新个人信息请求（传哪个字段就更新哪个，不传保持不变）
+ * 对应后端 UpdateProfileDTO
+ */
+data class UpdateProfileRequest(
+    val nickname: String? = null,
+    val email: String? = null,
+    val phone: String? = null,
+    val avatar: String? = null
+)

@@ -20,8 +20,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.example.piano.core.manager.LocalThemeManager
 import com.example.piano.core.manager.ThemeManager
+import com.example.piano.data.auth.api.response.ProfileDTO
 import com.example.piano.ui.auth.viewmodel.AuthViewModel
 import com.example.piano.ui.components.SnackBarManager
 import com.example.piano.ui.theme.AppTheme
@@ -30,6 +32,8 @@ import com.example.piano.ui.theme.PianoTheme
 @Composable
 fun ProfilePage(
     onLogout: () -> Unit,
+    onEditProfile: () -> Unit = {},
+    onPermissionSettings: () -> Unit = {},
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     // 从 CompositionLocal 获取 ThemeManager
@@ -40,14 +44,22 @@ fun ProfilePage(
     // 计算当前是否深色模式
     val isDarkMode = actualTheme == AppTheme.Dark
 
+    val profile by authViewModel.profile.collectAsState()
+    val profileLoading by authViewModel.profileLoading.collectAsState()
+
+    LaunchedEffect(Unit) {
+        authViewModel.loadProfile()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        // Profile Header Card
+        // Profile Header Card（点击进入编辑页）
         Card(
+            onClick = onEditProfile,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
@@ -59,39 +71,19 @@ fun ProfilePage(
                 modifier = Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    PianoTheme.colors.primary,
-                                    PianoTheme.colors.secondary
-                                )
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "张",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
+                ProfileAvatar(profile = profile, isLoading = profileLoading)
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "张小明",
-                        style = MaterialTheme.typography.titleMedium,
+                        text = profile?.displayName()?.ifBlank { "—" } ?: profile?.username?.ifBlank { "—" } ?: if (profileLoading) "加载中..." else "—",
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "piano_lover@example.com",
-                        style = MaterialTheme.typography.bodySmall,
+                        text = profile?.email?.takeIf { it.isNotBlank() } ?: "邮箱未绑定",
+                        style = MaterialTheme.typography.bodyMedium,
                         color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(top = 2.dp)
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                     Row(
                         modifier = Modifier.padding(top = 8.dp),
@@ -158,14 +150,13 @@ fun ProfilePage(
                 SettingsItem(
                     icon = Icons.Default.Settings,
                     label = "账户设置",
-                    onClick = { },
+                    onClick = onEditProfile,
                     showDivider = true
                 )
                 SettingsItem(
-                    icon = Icons.Default.Notifications,
-                    label = "通知设置",
-                    badge = "3",
-                    onClick = { },
+                    icon = Icons.Default.Security,
+                    label = "权限设置",
+                    onClick = onPermissionSettings,
                     showDivider = true
                 )
                 SettingsItem(
@@ -240,6 +231,48 @@ fun ProfilePage(
                 style = MaterialTheme.typography.bodySmall,
                 color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
                 modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProfileAvatar(
+    profile: ProfileDTO?,
+    isLoading: Boolean
+) {
+    Box(
+        modifier = Modifier
+            .size(64.dp)
+            .clip(CircleShape)
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        PianoTheme.colors.primary,
+                        PianoTheme.colors.secondary
+                    )
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        when {
+            isLoading -> CircularProgressIndicator(
+                modifier = Modifier.size(32.dp),
+                color = Color.White,
+                strokeWidth = 2.dp
+            )
+            !profile?.avatar.isNullOrBlank() -> AsyncImage(
+                model = profile?.avatar,
+                contentDescription = "头像",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape)
+            )
+            else -> Text(
+                text = profile?.username?.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
             )
         }
     }

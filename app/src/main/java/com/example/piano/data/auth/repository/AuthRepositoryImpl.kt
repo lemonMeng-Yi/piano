@@ -6,8 +6,13 @@ import com.example.piano.data.auth.api.AuthApi
 import com.example.piano.data.auth.api.request.ForgotPasswordRequest
 import com.example.piano.data.auth.api.request.LoginRequest
 import com.example.piano.data.auth.api.request.RegisterRequest
+import com.example.piano.data.auth.api.request.UpdateProfileRequest
 import com.example.piano.data.auth.api.response.LoginResponse
+import com.example.piano.data.auth.api.response.ProfileDTO
 import com.example.piano.domain.auth.repository.AuthRepository
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import javax.inject.Inject
 
 /**
@@ -53,6 +58,51 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun logout(): ResponseState<String> {
         return try {
             authApi.logout().toState()
+        } catch (e: Exception) {
+            ResponseState.UnknownError(e)
+        }
+    }
+
+    override suspend fun getProfile(): ResponseState<ProfileDTO> {
+        return try {
+            authApi.getProfile().toState()
+        } catch (e: Exception) {
+            ResponseState.UnknownError(e)
+        }
+    }
+
+    override suspend fun updateProfile(
+        nickname: String?,
+        email: String?,
+        phone: String?,
+        avatar: String?
+    ): ResponseState<String> {
+        return try {
+            authApi.updateProfile(
+                UpdateProfileRequest(
+                    nickname = nickname,
+                    email = email,
+                    phone = phone,
+                    avatar = avatar
+                )
+            ).toState()
+        } catch (e: Exception) {
+            ResponseState.UnknownError(e)
+        }
+    }
+
+    override suspend fun uploadAvatar(file: java.io.File): ResponseState<String> {
+        return try {
+            val part = MultipartBody.Part.createFormData(
+                "file",
+                file.name,
+                file.asRequestBody("image/*".toMediaTypeOrNull())
+            )
+            when (val r = authApi.uploadAvatar(part).toState()) {
+                is ResponseState.Success -> ResponseState.Success(r.body.url)
+                is ResponseState.NetworkError -> r
+                is ResponseState.UnknownError -> r
+            }
         } catch (e: Exception) {
             ResponseState.UnknownError(e)
         }

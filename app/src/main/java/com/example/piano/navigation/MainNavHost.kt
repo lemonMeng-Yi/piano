@@ -37,8 +37,10 @@ import com.example.piano.ui.courses.sheet.SheetDetailEntry
 import com.example.piano.ui.courses.sheet.SheetDetailScreen
 import com.example.piano.ui.practice.FollowAlongEntry
 import com.example.piano.ui.practice.PracticePage
+import com.example.piano.ui.profile.ProfileEditPage
 import com.example.piano.ui.practice.VirtualKeyboardPracticeScreen
 import com.example.piano.ui.profile.ProfilePage
+import com.example.piano.ui.profile.PermissionSettingsPage
 
 /**
  * 功能级导航 (MainNavHost)
@@ -183,7 +185,17 @@ fun MainNavHost(
                     )
                 }
                 composable(NavRoutes.PROFILE) {
-                    ProfilePage(onLogout = onLogout)
+                    ProfilePage(
+                        onLogout = onLogout,
+                        onEditProfile = { navigationActions.navigateToProfileEdit() },
+                        onPermissionSettings = { navigationActions.navigateToPermissionSettings() }
+                    )
+                }
+                composable(NavRoutes.PROFILE_EDIT) {
+                    ProfileEditPage(onBack = { navController.popBackStack() })
+                }
+                composable(NavRoutes.PROFILE_PERMISSIONS) {
+                    PermissionSettingsPage(onBack = { navController.popBackStack() })
                 }
             }
         }
