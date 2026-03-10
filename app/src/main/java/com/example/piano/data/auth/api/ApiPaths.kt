@@ -20,4 +20,6 @@ object ApiPaths {
     /** 退出登录 */
     const val LOGOUT = "users/auth/logout"
 
+    /** 获取当前用户个人信息（需登录） */
+    const val PROFILE = "profile"
 }

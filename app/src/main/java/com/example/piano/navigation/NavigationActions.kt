@@ -82,6 +82,13 @@ class NavigationActions(private val navController: NavController) {
     }
 
     /**
+     * 导航到编辑个人资料页面
+     */
+    fun navigateToProfileEdit() {
+        navController.navigate(NavRoutes.PROFILE_EDIT)
+    }
+
+    /**
      * 导航到课程视频全屏播放页
      */
     fun navigateToCourseVideo(videoUrl: String) {

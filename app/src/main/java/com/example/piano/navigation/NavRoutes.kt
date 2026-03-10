@@ -19,6 +19,7 @@ object NavRoutes {
     const val PRACTICE_FOLLOW_ALONG = "practice_follow_along"
     const val COURSES = "courses"
     const val PROFILE = "profile"
+    const val PROFILE_EDIT = "profile_edit"
 
     /** 课程视频全屏播放，路径参数：course_video/{encodedVideoUrl} */
     const val COURSE_VIDEO = "course_video"
