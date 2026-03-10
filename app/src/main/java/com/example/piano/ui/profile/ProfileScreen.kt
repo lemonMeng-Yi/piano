@@ -33,6 +33,7 @@ import com.example.piano.ui.theme.PianoTheme
 fun ProfilePage(
     onLogout: () -> Unit,
     onEditProfile: () -> Unit = {},
+    onPermissionSettings: () -> Unit = {},
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     // 从 CompositionLocal 获取 ThemeManager
@@ -153,10 +154,9 @@ fun ProfilePage(
                     showDivider = true
                 )
                 SettingsItem(
-                    icon = Icons.Default.Notifications,
-                    label = "通知设置",
-                    badge = "3",
-                    onClick = { },
+                    icon = Icons.Default.Security,
+                    label = "权限设置",
+                    onClick = onPermissionSettings,
                     showDivider = true
                 )
                 SettingsItem(
