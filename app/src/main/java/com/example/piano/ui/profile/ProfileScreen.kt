@@ -158,12 +158,6 @@ fun ProfilePage(
                     showDivider = true
                 )
                 SettingsItem(
-                    icon = Icons.Default.HelpOutline,
-                    label = "帮助中心",
-                    onClick = { },
-                    showDivider = true
-                )
-                SettingsItem(
                     icon = Icons.Default.ExitToApp,
                     label = "退出登录",
                     onClick = {

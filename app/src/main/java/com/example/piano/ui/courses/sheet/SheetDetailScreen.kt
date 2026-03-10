@@ -32,6 +32,8 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -513,6 +515,7 @@ fun SheetDetailScreen(
                 var showResultDialog by remember { mutableStateOf(false) }
                 var hasAdvancedForCurrentIndex by remember { mutableStateOf(false) }
                 var lastRecordedWrongMidi by remember { mutableStateOf<Int?>(null) }
+                var lastPitchThatAdvanced by remember { mutableStateOf<Int?>(null) }
                 var hasStartedCapture by remember { mutableStateOf(false) }
 
                 LaunchedEffect(showSoundPractice) {
@@ -523,16 +526,21 @@ fun SheetDetailScreen(
                 }
 
                 LaunchedEffect(currentIndex) {
-                    hasAdvancedForCurrentIndex = false
                     lastRecordedWrongMidi = null
                 }
 
                 LaunchedEffect(soundPracticeCurrentPitch, currentIndex, finished) {
                     if (finished) return@LaunchedEffect
-                    val pitch = soundPracticeCurrentPitch as? PitchResult.Pitch ?: return@LaunchedEffect
+                    val pitch = soundPracticeCurrentPitch as? PitchResult.Pitch
+                    if (pitch == null) {
+                        lastPitchThatAdvanced = null
+                        return@LaunchedEffect
+                    }
+                    if (pitch.note.midi != lastPitchThatAdvanced) lastPitchThatAdvanced = null
                     val expected = notes.getOrNull(currentIndex) ?: return@LaunchedEffect
                     if (pitch.note.midi == expected.midi) {
-                        if (hasAdvancedForCurrentIndex) return@LaunchedEffect
+                        if (lastPitchThatAdvanced == pitch.note.midi) return@LaunchedEffect
+                        lastPitchThatAdvanced = pitch.note.midi
                         hasAdvancedForCurrentIndex = true
                         wrongMidi = null
                         correctMidi = expected.midi
@@ -595,13 +603,31 @@ fun SheetDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(
+                        IconButton(onClick = {
+                            showResultDialog = false
+                            currentIndex = 0
+                            records.clear()
+                            wrongMidi = null
+                            correctMidi = null
+                            finished = false
+                        }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Refresh,
+                                contentDescription = "重新开始",
+                                tint = PianoTheme.colors.onSurface
+                            )
+                        }
+                        IconButton(
                             onClick = {
                                 finished = true
                                 showResultDialog = true
                             }
                         ) {
-                            Text("提前结束", style = MaterialTheme.typography.bodyMedium)
+                            Icon(
+                                imageVector = Icons.Outlined.Stop,
+                                contentDescription = "提前结束",
+                                tint = PianoTheme.colors.onSurface
+                            )
                         }
                         Spacer(modifier = Modifier.weight(1f))
                         Text(
@@ -642,45 +668,57 @@ fun SheetDetailScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(Modifier.padding(24.dp)) {
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        text = "练习结果",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                    IconButton(
+                                        onClick = {
+                                            showResultDialog = false
+                                            viewModel.dismissSoundPracticeKeyboard()
+                                        },
+                                        modifier = Modifier.align(Alignment.CenterEnd)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Close,
+                                            contentDescription = "关闭",
+                                            tint = PianoTheme.colors.onSurface
+                                        )
+                                    }
+                                }
                                 Text(
-                                    text = "练习结果",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "进度：已弹 $playedCount / 总 $total 个音（$progressPercent%）",
+                                    text = if (playedCount > 0)
+                                        "本次共弹奏了 $playedCount 个音，完成整首曲目的 $progressPercent%。"
+                                    else
+                                        "尚未弹奏任何音。",
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = PianoTheme.colors.onSurface,
-                                    modifier = Modifier.padding(top = 12.dp)
+                                    modifier = Modifier.padding(top = 16.dp)
                                 )
                                 if (playedCount > 0) {
                                     Text(
-                                        text = "正确率（按已弹数量）：（$playedCount - $wrongCount 错）/ $playedCount = $accuracyPercent%",
+                                        text = "在已弹奏的音中，正确 ${playedCount - wrongCount} 个，正确率为 $accuracyPercent%。",
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = PianoTheme.colors.primary,
                                         modifier = Modifier.padding(top = 8.dp)
                                     )
-                                } else {
-                                    Text(
-                                        text = "尚未弹奏，无正确率",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
-                                        modifier = Modifier.padding(top = 8.dp)
-                                    )
-                                }
-                                if (wrongCount > 0) {
-                                    Text(
-                                        text = "错了 $wrongCount 个音",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = PianoTheme.colors.onSurface.copy(alpha = 0.8f),
-                                        modifier = Modifier.padding(top = 4.dp)
-                                    )
+                                    if (wrongCount > 0) {
+                                        Text(
+                                            text = "其中 $wrongCount 个音弹错，可以针对这些音多练习几遍。",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = PianoTheme.colors.onSurface.copy(alpha = 0.8f),
+                                            modifier = Modifier.padding(top = 6.dp)
+                                        )
+                                    }
                                 }
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 20.dp),
-                                    horizontalArrangement = Arrangement.End
+                                        .padding(top = 24.dp),
+                                    horizontalArrangement = Arrangement.Center
                                 ) {
                                     Button(
                                         onClick = {
@@ -692,21 +730,19 @@ fun SheetDetailScreen(
                                             finished = false
                                         }
                                     ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Refresh,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp),
+                                            tint = PianoTheme.colors.onPrimary
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text("再来一次")
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Button(
-                                        onClick = {
-                                            showResultDialog = false
-                                            viewModel.dismissSoundPracticeKeyboard()
-                                        }
-                                    ) {
-                                        Text("关闭")
                                     }
                                 }
                             }
                         }
-                }
+                    }
             }
             }
 
@@ -720,6 +756,7 @@ fun SheetDetailScreen(
                 var btShowResultDialog by remember { mutableStateOf(false) }
                 var btHasAdvanced by remember { mutableStateOf(false) }
                 var btLastRecordedWrong by remember { mutableStateOf<Int?>(null) }
+                var btLastPitchThatAdvanced by remember { mutableStateOf<Int?>(null) }
 
                 DisposableEffect(Unit) {
                     onDispose { viewModel.dismissBluetoothPracticeKeyboard() }
@@ -727,15 +764,20 @@ fun SheetDetailScreen(
 
                 if (btNotes != null) {
                     LaunchedEffect(btCurrentIndex) {
-                        btHasAdvanced = false
                         btLastRecordedWrong = null
                     }
                     LaunchedEffect(bluetoothPracticeCurrentPitch, btCurrentIndex, btFinished) {
                         if (btFinished) return@LaunchedEffect
-                        val pitch = bluetoothPracticeCurrentPitch as? PitchResult.Pitch ?: return@LaunchedEffect
+                        val pitch = bluetoothPracticeCurrentPitch as? PitchResult.Pitch
+                        if (pitch == null) {
+                            btLastPitchThatAdvanced = null
+                            return@LaunchedEffect
+                        }
+                        if (pitch.note.midi != btLastPitchThatAdvanced) btLastPitchThatAdvanced = null
                         val expected = btNotes.getOrNull(btCurrentIndex) ?: return@LaunchedEffect
                         if (pitch.note.midi == expected.midi) {
-                            if (btHasAdvanced) return@LaunchedEffect
+                            if (btLastPitchThatAdvanced == pitch.note.midi) return@LaunchedEffect
+                            btLastPitchThatAdvanced = pitch.note.midi
                             btHasAdvanced = true
                             btWrongMidi = null
                             btCorrectMidi = expected.midi
@@ -794,13 +836,31 @@ fun SheetDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(
+                        IconButton(onClick = {
+                            btShowResultDialog = false
+                            btCurrentIndex = 0
+                            btRecords.clear()
+                            btWrongMidi = null
+                            btCorrectMidi = null
+                            btFinished = false
+                        }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Refresh,
+                                contentDescription = "重新开始",
+                                tint = PianoTheme.colors.onSurface
+                            )
+                        }
+                        IconButton(
                             onClick = {
                                 btFinished = true
                                 btShowResultDialog = true
                             }
                         ) {
-                            Text("提前结束", style = MaterialTheme.typography.bodyMedium)
+                            Icon(
+                                imageVector = Icons.Outlined.Stop,
+                                contentDescription = "提前结束",
+                                tint = PianoTheme.colors.onSurface
+                            )
                         }
                         Spacer(modifier = Modifier.weight(1f))
                         Text(
@@ -902,45 +962,57 @@ fun SheetDetailScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(Modifier.padding(24.dp)) {
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        text = "练习结果",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                    IconButton(
+                                        onClick = {
+                                            btShowResultDialog = false
+                                            viewModel.dismissBluetoothPracticeKeyboard()
+                                        },
+                                        modifier = Modifier.align(Alignment.CenterEnd)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Close,
+                                            contentDescription = "关闭",
+                                            tint = PianoTheme.colors.onSurface
+                                        )
+                                    }
+                                }
                                 Text(
-                                    text = "练习结果",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "进度：已弹 $playedCount / 总 $total 个音（$progressPercent%）",
+                                    text = if (playedCount > 0)
+                                        "本次共弹奏了 $playedCount 个音，完成整首曲目的 $progressPercent%。"
+                                    else
+                                        "尚未弹奏任何音。",
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = PianoTheme.colors.onSurface,
-                                    modifier = Modifier.padding(top = 12.dp)
+                                    modifier = Modifier.padding(top = 16.dp)
                                 )
                                 if (playedCount > 0) {
                                     Text(
-                                        text = "正确率（按已弹数量）：$accuracyPercent%",
+                                        text = "在已弹奏的音中，正确 ${playedCount - wrongCount} 个，正确率为 $accuracyPercent%。",
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = PianoTheme.colors.primary,
                                         modifier = Modifier.padding(top = 8.dp)
                                     )
-                                } else {
-                                    Text(
-                                        text = "尚未弹奏，无正确率",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
-                                        modifier = Modifier.padding(top = 8.dp)
-                                    )
-                                }
-                                if (wrongCount > 0) {
-                                    Text(
-                                        text = "错了 $wrongCount 个音",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = PianoTheme.colors.onSurface.copy(alpha = 0.8f),
-                                        modifier = Modifier.padding(top = 4.dp)
-                                    )
+                                    if (wrongCount > 0) {
+                                        Text(
+                                            text = "其中 $wrongCount 个音弹错，可以针对这些音多练习几遍。",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = PianoTheme.colors.onSurface.copy(alpha = 0.8f),
+                                            modifier = Modifier.padding(top = 6.dp)
+                                        )
+                                    }
                                 }
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 20.dp),
-                                    horizontalArrangement = Arrangement.End
+                                        .padding(top = 24.dp),
+                                    horizontalArrangement = Arrangement.Center
                                 ) {
                                     Button(
                                         onClick = {
@@ -952,16 +1024,14 @@ fun SheetDetailScreen(
                                             btFinished = false
                                         }
                                     ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Refresh,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp),
+                                            tint = PianoTheme.colors.onPrimary
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text("再来一次")
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Button(
-                                        onClick = {
-                                            btShowResultDialog = false
-                                            viewModel.dismissBluetoothPracticeKeyboard()
-                                        }
-                                    ) {
-                                        Text("关闭")
                                     }
                                 }
                             }
@@ -1030,13 +1100,31 @@ fun SheetDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(
+                        IconButton(onClick = {
+                            showPracticeResultDialog = false
+                            currentIndex = 0
+                            records.clear()
+                            wrongMidi = null
+                            correctMidi = null
+                            finished = false
+                        }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Refresh,
+                                contentDescription = "重新开始",
+                                tint = PianoTheme.colors.onSurface
+                            )
+                        }
+                        IconButton(
                             onClick = {
                                 finished = true
                                 showPracticeResultDialog = true
                             }
                         ) {
-                            Text("提前结束", style = MaterialTheme.typography.bodyMedium)
+                            Icon(
+                                imageVector = Icons.Outlined.Stop,
+                                contentDescription = "提前结束",
+                                tint = PianoTheme.colors.onSurface
+                            )
                         }
                         Spacer(modifier = Modifier.weight(1f))
                         Text(
@@ -1078,45 +1166,57 @@ fun SheetDetailScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(Modifier.padding(24.dp)) {
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        text = "练习结果",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                    IconButton(
+                                        onClick = {
+                                            showPracticeResultDialog = false
+                                            viewModel.dismissVirtualPracticeKeyboard()
+                                        },
+                                        modifier = Modifier.align(Alignment.CenterEnd)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Close,
+                                            contentDescription = "关闭",
+                                            tint = PianoTheme.colors.onSurface
+                                        )
+                                    }
+                                }
                                 Text(
-                                    text = "练习结果",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "进度：已弹 $playedCount / 总 $total 个音（$progressPercent%）",
+                                    text = if (playedCount > 0)
+                                        "本次共弹奏了 $playedCount 个音，完成整首曲目的 $progressPercent%。"
+                                    else
+                                        "尚未弹奏任何音。",
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = PianoTheme.colors.onSurface,
-                                    modifier = Modifier.padding(top = 12.dp)
+                                    modifier = Modifier.padding(top = 16.dp)
                                 )
                                 if (playedCount > 0) {
                                     Text(
-                                        text = "正确率（按已弹数量）：（$playedCount - $wrongCount 错）/ $playedCount = $accuracyPercent%",
+                                        text = "在已弹奏的音中，正确 ${playedCount - wrongCount} 个，正确率为 $accuracyPercent%。",
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = PianoTheme.colors.primary,
                                         modifier = Modifier.padding(top = 8.dp)
                                     )
-                                } else {
-                                    Text(
-                                        text = "尚未弹奏，无正确率",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = PianoTheme.colors.onSurface.copy(alpha = 0.7f),
-                                        modifier = Modifier.padding(top = 8.dp)
-                                    )
-                                }
-                                if (wrongCount > 0) {
-                                    Text(
-                                        text = "错了 $wrongCount 个音",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = PianoTheme.colors.onSurface.copy(alpha = 0.8f),
-                                        modifier = Modifier.padding(top = 4.dp)
-                                    )
+                                    if (wrongCount > 0) {
+                                        Text(
+                                            text = "其中 $wrongCount 个音弹错，可以针对这些音多练习几遍。",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = PianoTheme.colors.onSurface.copy(alpha = 0.8f),
+                                            modifier = Modifier.padding(top = 6.dp)
+                                        )
+                                    }
                                 }
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 20.dp),
-                                    horizontalArrangement = Arrangement.End
+                                        .padding(top = 24.dp),
+                                    horizontalArrangement = Arrangement.Center
                                 ) {
                                     Button(
                                         onClick = {
@@ -1128,16 +1228,14 @@ fun SheetDetailScreen(
                                             finished = false
                                         }
                                     ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Refresh,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp),
+                                            tint = PianoTheme.colors.onPrimary
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text("再来一次")
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Button(
-                                        onClick = {
-                                            showPracticeResultDialog = false
-                                            viewModel.dismissVirtualPracticeKeyboard()
-                                        }
-                                    ) {
-                                        Text("关闭")
                                     }
                                 }
                             }
