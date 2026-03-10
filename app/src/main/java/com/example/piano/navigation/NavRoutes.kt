@@ -5,7 +5,7 @@ package com.example.piano.navigation
  * 
  * 路由分为两个层级：
  * 1. 认证路由（Auth Routes）：登录、注册等认证相关页面
- * 2. 主功能路由（Main Routes）：首页、练习、课程、个人资料等核心功能页面
+ * 2. 主功能路由（Main Routes）：首页、陪练、课程、个人资料等核心功能页面
  */
 object NavRoutes {
     // ========== 认证路由 ==========
@@ -15,7 +15,6 @@ object NavRoutes {
     
     // ========== 主功能路由 ==========
     const val HOME = "home"
-    const val PRACTICE = "practice"
     const val PRACTICE_FOLLOW_ALONG = "practice_follow_along"
     /** 陪练（曲谱库） */
     const val ACCOMPANY = "accompany"
@@ -23,6 +22,9 @@ object NavRoutes {
     const val PROFILE = "profile"
     const val PROFILE_EDIT = "profile_edit"
     const val PROFILE_PERMISSIONS = "profile_permissions"
+
+    /** 琴音检测（麦克风/蓝牙 MIDI 实时音高显示） */
+    const val PITCH_DETECTION = "pitch_detection"
 
     /** 课程视频全屏播放，路径参数：course_video/{encodedVideoUrl} */
     const val COURSE_VIDEO = "course_video"

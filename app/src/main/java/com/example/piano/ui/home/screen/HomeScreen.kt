@@ -136,7 +136,7 @@ fun HomePage(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = if (lastPlayedRecord != null) "开始练习" else "去选曲目",
-                        style = MaterialTheme.typography.titleSmall
+                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp)
                     )
                 }
             }
@@ -321,7 +321,10 @@ fun HomePage(
                             colors = ButtonDefaults.buttonColors(containerColor = PianoTheme.colors.primary),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("更多曲谱")
+                            Text(
+                                "更多曲谱",
+                                style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp)
+                            )
                             Spacer(modifier = Modifier.width(4.dp))
                             Icon(
                                 Icons.Default.KeyboardArrowRight,

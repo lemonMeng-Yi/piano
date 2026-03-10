@@ -34,6 +34,8 @@ fun ProfilePage(
     onLogout: () -> Unit,
     onEditProfile: () -> Unit = {},
     onPermissionSettings: () -> Unit = {},
+    onPitchDetection: () -> Unit = {},
+    onNavigateToFollowAlong: () -> Unit = {},
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     // 从 CompositionLocal 获取 ThemeManager
@@ -92,7 +94,7 @@ fun ProfilePage(
         // Settings Section
         Text(
             text = "设置",
-            style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp),
+            style = MaterialTheme.typography.titleSmall.copy(fontSize = 18.sp),
             fontWeight = FontWeight.SemiBold,
             color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
@@ -132,7 +134,7 @@ fun ProfilePage(
         // Support Section
         Text(
             text = "支持",
-            style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp),
+            style = MaterialTheme.typography.titleSmall.copy(fontSize = 18.sp),
             fontWeight = FontWeight.SemiBold,
             color = PianoTheme.colors.onSurface.copy(alpha = 0.6f),
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
@@ -143,6 +145,18 @@ fun ProfilePage(
                 .padding(bottom = 16.dp)
         ) {
             Column {
+                SettingsItem(
+                    icon = Icons.Default.Mic,
+                    label = "琴音检测",
+                    onClick = onPitchDetection,
+                    showDivider = true
+                )
+                SettingsItem(
+                    icon = Icons.Default.PlayArrow,
+                    label = "智能纠错",
+                    onClick = onNavigateToFollowAlong,
+                    showDivider = true
+                )
                 SettingsItem(
                     icon = Icons.Default.HelpOutline,
                     label = "帮助中心",

@@ -52,13 +52,6 @@ class NavigationActions(private val navController: NavController) {
             popUpTo(NavRoutes.HOME) { inclusive = true }
         }
     }
-    
-    /**
-     * 导航到练习页面
-     */
-    fun navigateToPractice() {
-        navController.navigate(NavRoutes.PRACTICE)
-    }
 
     /**
      * 导航到跟弹纠错页面
@@ -100,6 +93,13 @@ class NavigationActions(private val navController: NavController) {
      */
     fun navigateToPermissionSettings() {
         navController.navigate(NavRoutes.PROFILE_PERMISSIONS)
+    }
+
+    /**
+     * 导航到琴音检测页面（麦克风/蓝牙 MIDI 实时音高）
+     */
+    fun navigateToPitchDetection() {
+        navController.navigate(NavRoutes.PITCH_DETECTION)
     }
 
     /**

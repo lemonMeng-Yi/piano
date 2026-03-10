@@ -12,6 +12,7 @@ import androidx.compose.material.icons.outlined.Piano
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import com.example.piano.ui.theme.PianoTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -22,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -38,7 +40,7 @@ import com.example.piano.ui.courses.CoursesPage
 import com.example.piano.ui.courses.sheet.SheetDetailEntry
 import com.example.piano.ui.courses.sheet.SheetDetailScreen
 import com.example.piano.ui.practice.FollowAlongEntry
-import com.example.piano.ui.practice.PracticePage
+import com.example.piano.ui.practice.PitchDetectionScreen
 import com.example.piano.ui.profile.ProfileEditPage
 import com.example.piano.ui.practice.VirtualKeyboardPracticeScreen
 import com.example.piano.ui.profile.ProfilePage
@@ -78,37 +80,31 @@ fun MainNavHost(
 
     Scaffold(
         bottomBar = {
-            if (currentRoute != NavRoutes.PRACTICE_FOLLOW_ALONG && !currentRoute.orEmpty().startsWith("${NavRoutes.COURSE_VIDEO}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.COURSE_DETAIL}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.SHEET_DETAIL}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.SHEET_VIRTUAL_PRACTICE}/")) {
+            if (currentRoute != NavRoutes.PRACTICE_FOLLOW_ALONG && currentRoute != NavRoutes.PITCH_DETECTION && !currentRoute.orEmpty().startsWith("${NavRoutes.COURSE_VIDEO}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.COURSE_DETAIL}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.SHEET_DETAIL}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.SHEET_VIRTUAL_PRACTICE}/")) {
             NavigationBar(
                 containerColor = PianoTheme.colors.surface
             ) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Home, contentDescription = "首页") },
-                    label = { Text("首页") },
+                    label = { Text("首页", style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp)) },
                     selected = currentRoute == NavRoutes.HOME,
                     onClick = { navigationActions.navigateToHome() }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.MusicNote, contentDescription = "练习") },
-                    label = { Text("练习") },
-                    selected = currentRoute == NavRoutes.PRACTICE,
-                    onClick = { navigationActions.navigateToPractice() }
-                )
-                NavigationBarItem(
                     icon = { Icon(Icons.Outlined.Piano, contentDescription = "陪练") },
-                    label = { Text("陪练") },
+                    label = { Text("陪练", style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp)) },
                     selected = currentRoute == NavRoutes.ACCOMPANY,
                     onClick = { navigationActions.navigateToAccompany() }
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.MenuBook, contentDescription = "课程") },
-                    label = { Text("课程") },
+                    label = { Text("课程", style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp)) },
                     selected = currentRoute == NavRoutes.COURSES,
                     onClick = { navigationActions.navigateToCourses() }
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Person, contentDescription = "我的") },
-                    label = { Text("我的") },
+                    label = { Text("我的", style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp)) },
                     selected = currentRoute == NavRoutes.PROFILE,
                     onClick = { navigationActions.navigateToProfile() }
                 )
@@ -141,11 +137,11 @@ fun MainNavHost(
                     )
                 }
                 
-                composable(NavRoutes.PRACTICE) {
-                    PracticePage(navController = navController)
-                }
                 composable(NavRoutes.PRACTICE_FOLLOW_ALONG) {
                     FollowAlongEntry(pieceId = null, onBack = { navController.popBackStack() })
+                }
+                composable(NavRoutes.PITCH_DETECTION) {
+                    PitchDetectionScreen(onBack = { navController.popBackStack() })
                 }
                 composable(NavRoutes.ACCOMPANY) {
                     AccompanimentPage(
@@ -200,7 +196,9 @@ fun MainNavHost(
                     ProfilePage(
                         onLogout = onLogout,
                         onEditProfile = { navigationActions.navigateToProfileEdit() },
-                        onPermissionSettings = { navigationActions.navigateToPermissionSettings() }
+                        onPermissionSettings = { navigationActions.navigateToPermissionSettings() },
+                        onPitchDetection = { navigationActions.navigateToPitchDetection() },
+                        onNavigateToFollowAlong = { navigationActions.navigateToPracticeFollowAlong() }
                     )
                 }
                 composable(NavRoutes.PROFILE_EDIT) {
