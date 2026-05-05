@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -189,6 +190,7 @@ fun ProfileEditPage(
                         localAvatarUri != null -> AsyncImage(
                             model = localAvatarUri,
                             contentDescription = "头像预览",
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clip(CircleShape)
@@ -196,6 +198,7 @@ fun ProfileEditPage(
                         !profile?.avatar.isNullOrBlank() -> AsyncImage(
                             model = profile?.avatar,
                             contentDescription = "头像",
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clip(CircleShape)

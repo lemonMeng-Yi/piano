@@ -39,7 +39,7 @@ fun BackTitleTopBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(PianoTheme.colors.surface)
+            .background(PianoTheme.colors.background)
             .height(56.dp)
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
