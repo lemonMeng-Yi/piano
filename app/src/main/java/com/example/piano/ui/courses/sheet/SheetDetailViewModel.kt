@@ -25,6 +25,12 @@ import com.example.piano.core.audio.PitchResult
 import com.example.piano.core.midi.MidiFileParser
 import com.example.piano.core.midi.MidiPitchSource
 import com.example.piano.core.network.util.ResponseState
+import com.example.piano.data.evaluation.api.dto.EvaluationRequest
+import com.example.piano.data.evaluation.api.dto.EvaluationResponse
+import com.example.piano.data.evaluation.api.dto.EvaluationStats
+import com.example.piano.data.evaluation.api.dto.WrongNoteDetail
+import com.example.piano.domain.evaluation.repository.EvaluationRepository
+import com.example.piano.domain.practice.CorrectionRecord
 import com.example.piano.domain.practice.Note
 import com.example.piano.domain.sheet.repository.SheetRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -65,6 +71,7 @@ class SheetDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     @ApplicationContext private val context: Context,
     private val sheetRepository: SheetRepository,
+    private val evaluationRepository: EvaluationRepository,
     private val audioPlayback: SheetAudioPlaybackManager
 ) : ViewModel() {
 
@@ -110,7 +117,69 @@ class SheetDetailViewModel @Inject constructor(
     private val _virtualPracticeLoading = MutableStateFlow(false)
     val virtualPracticeLoading: StateFlow<Boolean> = _virtualPracticeLoading.asStateFlow()
 
+    /** AI 测评：是否处于测评模式 */
+    private val _isEvaluationMode = MutableStateFlow(false)
+    val isEvaluationMode: StateFlow<Boolean> = _isEvaluationMode.asStateFlow()
+
+    /** AI 测评：测评结果 */
+    private val _evaluationResult = MutableStateFlow<EvaluationResponse?>(null)
+    val evaluationResult: StateFlow<EvaluationResponse?> = _evaluationResult.asStateFlow()
+
+    /** AI 测评：是否正在请求 AI 测评 */
+    private val _evaluationLoading = MutableStateFlow(false)
+    val evaluationLoading: StateFlow<Boolean> = _evaluationLoading.asStateFlow()
+
     fun clearSnackbarMessage() { _snackbarMessage.value = null }
+
+    fun clearEvaluationResult() { _evaluationResult.value = null }
+
+    fun setEvaluationMode(enabled: Boolean) { _isEvaluationMode.value = enabled }
+
+    /**
+     * 提交弹奏记录进行 AI 测评
+     */
+    fun submitEvaluation(records: List<CorrectionRecord>, totalNotes: Int) {
+        val success = _state.value as? SheetDetailUiState.Success ?: return
+        val playedIndices = records.map { it.index }.toSet()
+        val playedCount = playedIndices.size
+        val wrongCount = records.filter { !it.isCorrect }.map { it.index }.toSet().size
+        val missedCount = totalNotes - playedCount
+        val accuracyPercent = if (totalNotes > 0) (totalNotes - wrongCount) * 100 / totalNotes else 100
+
+        val wrongNotes = records
+            .filter { !it.isCorrect }
+            .distinctBy { it.index }
+            .map { r ->
+                WrongNoteDetail(
+                    position = r.index + 1,
+                    expected = r.expected.displayName(),
+                    actual = r.actual.displayName()
+                )
+            }
+
+        val request = EvaluationRequest(
+            sheetId = sheetId,
+            sheetTitle = success.title,
+            stats = EvaluationStats(
+                wrongNoteCount = wrongCount,
+                missedNoteCount = missedCount,
+                playedNoteCount = playedCount,
+                totalNoteCount = totalNotes,
+                accuracyPercent = accuracyPercent,
+                wrongNotes = wrongNotes
+            )
+        )
+
+        viewModelScope.launch {
+            _evaluationLoading.value = true
+            when (val result = evaluationRepository.evaluate(request)) {
+                is ResponseState.Success -> _evaluationResult.value = result.body
+                is ResponseState.NetworkError -> _snackbarMessage.value = result.msg
+                is ResponseState.UnknownError -> _snackbarMessage.value = result.throwable?.message ?: "测评请求失败"
+            }
+            _evaluationLoading.value = false
+        }
+    }
 
     fun setUseStaffNotation(useStaff: Boolean) {
         _useStaffNotation.value = useStaff

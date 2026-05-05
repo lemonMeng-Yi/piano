@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.piano.ui.theme.PianoTheme
@@ -34,12 +35,13 @@ fun BackTitleTopBar(
     title: String,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    backgroundColor: Color = PianoTheme.colors.background,
     trailingContent: (@Composable () -> Unit)? = null
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(PianoTheme.colors.background)
+            .background(backgroundColor)
             .height(56.dp)
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically

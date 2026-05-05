@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -213,6 +214,9 @@ fun SheetDetailScreen(
     val isBluetoothEnabled by viewModel.bluetoothEnabled.collectAsState()
     val midiConnectionError by viewModel.midiConnectionError.collectAsState()
     val isMidiSupported = viewModel.isMidiSupported
+    val isEvaluationMode by viewModel.isEvaluationMode.collectAsState()
+    val evaluationResult by viewModel.evaluationResult.collectAsState()
+    val evaluationLoading by viewModel.evaluationLoading.collectAsState()
     val context = LocalContext.current
 
     /** 选择蓝牙 MIDI 时先弹出「蓝牙MIDI设备」弹窗，连接成功后再关闭弹窗并弹出键盘 */
@@ -278,6 +282,8 @@ fun SheetDetailScreen(
     }
 
     var showPracticeMethodDialog by remember { mutableStateOf(false) }
+    var showModeSelectionDialog by remember { mutableStateOf(false) }
+    var pendingPracticeMethod by remember { mutableStateOf<PracticeMethod?>(null) }
 
     /** 声音识别：先弹权限弹窗，同意后再显示键盘 */
     var pendingSoundPermissionRequest by remember { mutableStateOf(false) }
@@ -317,6 +323,7 @@ fun SheetDetailScreen(
                 BackTitleTopBar(
                     title = "",
                     onBack = onBack,
+                    backgroundColor = PianoTheme.colors.surface,
                     trailingContent = if (successState != null) {
                         {
                             Row(
@@ -555,7 +562,11 @@ fun SheetDetailScreen(
                         currentIndex++
                         if (currentIndex >= notes.size) {
                             finished = true
-                            showResultDialog = true
+                            if (isEvaluationMode) {
+                                viewModel.submitEvaluation(records.toList(), notes.size)
+                            } else {
+                                showResultDialog = true
+                            }
                         }
                     } else {
                         val prevNote = notes.getOrNull(currentIndex - 1)
@@ -620,7 +631,11 @@ fun SheetDetailScreen(
                         IconButton(
                             onClick = {
                                 finished = true
-                                showResultDialog = true
+                                if (isEvaluationMode) {
+                                    viewModel.submitEvaluation(records.toList(), notes.size)
+                                } else {
+                                    showResultDialog = true
+                                }
                             }
                         ) {
                             Icon(
@@ -790,9 +805,13 @@ fun SheetDetailScreen(
                                 )
                             )
                             btCurrentIndex++
-                            if (btCurrentIndex >= btNotes.size) {
+                            if (btCurrentIndex >= (btNotes?.size ?: 0)) {
                                 btFinished = true
-                                btShowResultDialog = true
+                                if (isEvaluationMode) {
+                                    viewModel.submitEvaluation(btRecords.toList(), btNotes?.size ?: 0)
+                                } else {
+                                    btShowResultDialog = true
+                                }
                             }
                         } else {
                             val prevNote = btNotes.getOrNull(btCurrentIndex - 1)
@@ -853,7 +872,11 @@ fun SheetDetailScreen(
                         IconButton(
                             onClick = {
                                 btFinished = true
-                                btShowResultDialog = true
+                                if (isEvaluationMode) {
+                                    viewModel.submitEvaluation(btRecords.toList(), btNotes?.size ?: 0)
+                                } else {
+                                    btShowResultDialog = true
+                                }
                             }
                         ) {
                             Icon(
@@ -1068,7 +1091,11 @@ fun SheetDetailScreen(
                         currentIndex++
                         if (currentIndex >= notes.size) {
                             finished = true
-                            showPracticeResultDialog = true
+                            if (isEvaluationMode) {
+                                viewModel.submitEvaluation(records.toList(), notes.size)
+                            } else {
+                                showPracticeResultDialog = true
+                            }
                         }
                     } else {
                         wrongMidi = note.midi
@@ -1117,7 +1144,11 @@ fun SheetDetailScreen(
                         IconButton(
                             onClick = {
                                 finished = true
-                                showPracticeResultDialog = true
+                                if (isEvaluationMode) {
+                                    viewModel.submitEvaluation(records.toList(), notes.size)
+                                } else {
+                                    showPracticeResultDialog = true
+                                }
                             }
                         ) {
                             Icon(
@@ -1288,20 +1319,29 @@ fun SheetDetailScreen(
         PracticeMethodDialog(
             onDismiss = { showPracticeMethodDialog = false },
             onSelectMethod = { method ->
-                when (method) {
-                    PracticeMethod.VIRTUAL_KEYBOARD -> {
-                        showPracticeMethodDialog = false
-                        viewModel.startVirtualPractice()
-                    }
-                    PracticeMethod.SOUND_RECOGNITION -> {
-                        showPracticeMethodDialog = false
-                        pendingSoundPermissionRequest = true
-                    }
-                    PracticeMethod.BLUETOOTH_MIDI -> {
-                        showPracticeMethodDialog = false
-                        showBluetoothMidiDialog = true
-                    }
+                showPracticeMethodDialog = false
+                pendingPracticeMethod = method
+                showModeSelectionDialog = true
+            }
+        )
+    }
+
+    if (showModeSelectionDialog) {
+        ModeSelectionDialog(
+            onDismiss = {
+                showModeSelectionDialog = false
+                pendingPracticeMethod = null
+            },
+            onSelectMode = { isEvaluation ->
+                showModeSelectionDialog = false
+                viewModel.setEvaluationMode(isEvaluation)
+                when (pendingPracticeMethod) {
+                    PracticeMethod.VIRTUAL_KEYBOARD -> viewModel.startVirtualPractice()
+                    PracticeMethod.SOUND_RECOGNITION -> pendingSoundPermissionRequest = true
+                    PracticeMethod.BLUETOOTH_MIDI -> showBluetoothMidiDialog = true
+                    else -> {}
                 }
+                pendingPracticeMethod = null
             }
         )
     }
@@ -1320,5 +1360,131 @@ fun SheetDetailScreen(
             onScanClick = { ensureScanPermissionAndStartScan() },
             onDeviceClick = { viewModel.connectBluetoothMidi(it) }
         )
+    }
+
+    // AI 测评结果弹窗
+    evaluationResult?.let { result ->
+        Dialog(onDismissRequest = { viewModel.clearEvaluationResult() }) {
+            Box(
+                modifier = Modifier.fillMaxHeight(0.85f),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = PianoTheme.colors.surface),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(24.dp)
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "AI 测评结果",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                        IconButton(
+                            onClick = { viewModel.clearEvaluationResult() },
+                            modifier = Modifier.align(Alignment.CenterEnd)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Close,
+                                contentDescription = "关闭",
+                                tint = PianoTheme.colors.onSurface
+                            )
+                        }
+                    }
+
+                    // 总评分
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "${result.totalScore}",
+                                style = MaterialTheme.typography.displayLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = PianoTheme.colors.primary
+                            )
+                            Text(
+                                text = "分",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = PianoTheme.colors.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+
+                    // 评价
+                    Text(
+                        text = "综合评价",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PianoTheme.colors.onSurface
+                    )
+                    Text(
+                        text = result.comment,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = PianoTheme.colors.onSurface.copy(alpha = 0.85f),
+                        modifier = Modifier.padding(top = 6.dp, bottom = 12.dp)
+                    )
+
+                    // 建议
+                    Text(
+                        text = "练习建议",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PianoTheme.colors.onSurface
+                    )
+                    Text(
+                        text = result.suggestion,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = PianoTheme.colors.onSurface.copy(alpha = 0.85f),
+                        modifier = Modifier.padding(top = 6.dp, bottom = 16.dp)
+                    )
+
+                    // 关闭按钮
+                    Button(
+                        onClick = { viewModel.clearEvaluationResult() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("知道了")
+                    }
+                }
+            }
+        }
+    }
+}
+
+    // AI 测评加载中
+    if (evaluationLoading) {
+        Dialog(onDismissRequest = { }) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = PianoTheme.colors.surface),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator(color = PianoTheme.colors.primary)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "AI 正在分析你的弹奏…",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = PianoTheme.colors.onSurface
+                    )
+                }
+            }
+        }
     }
 }

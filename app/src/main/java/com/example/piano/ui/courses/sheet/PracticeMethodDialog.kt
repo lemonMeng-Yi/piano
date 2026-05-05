@@ -2,6 +2,7 @@ package com.example.piano.ui.courses.sheet
 
 import android.bluetooth.BluetoothDevice
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.outlined.Bluetooth
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Piano
+
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -111,6 +113,72 @@ fun PracticeMethodDialog(
                             color = PianoTheme.colors.onSurface
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 模式选择弹窗：标题「选择模式」+ 两个横向排列的按钮（普通模式 / 测评模式）。
+ */
+@Composable
+fun ModeSelectionDialog(
+    onDismiss: () -> Unit,
+    onSelectMode: (isEvaluation: Boolean) -> Unit = {}
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = PianoTheme.colors.surface),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "选择模式",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = PianoTheme.colors.onSurface,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp),
+                    textAlign = TextAlign.Center
+                )
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = "关闭",
+                        tint = PianoTheme.colors.onSurface
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 20.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(
+                    onClick = {
+                        onSelectMode(false)
+                        onDismiss()
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("普通模式")
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Button(
+                    onClick = {
+                        onSelectMode(true)
+                        onDismiss()
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("测评模式")
                 }
             }
         }

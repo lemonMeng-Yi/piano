@@ -7,10 +7,13 @@ import com.example.piano.data.auth.api.AuthApi
 import com.example.piano.data.auth.repository.AuthRepositoryImpl
 import com.example.piano.data.course.api.CourseApi
 import com.example.piano.data.course.repository.CourseRepositoryImpl
+import com.example.piano.data.evaluation.api.EvaluationApi
+import com.example.piano.data.evaluation.repository.EvaluationRepositoryImpl
 import com.example.piano.data.sheet.api.SheetApi
 import com.example.piano.data.sheet.repository.SheetRepositoryImpl
 import com.example.piano.domain.auth.repository.AuthRepository
 import com.example.piano.domain.course.repository.CourseRepository
+import com.example.piano.domain.evaluation.repository.EvaluationRepository
 import com.example.piano.domain.sheet.repository.SheetRepository
 import dagger.Binds
 import dagger.Module
@@ -55,6 +58,12 @@ abstract class AppModule {
         fun provideSheetApi(): SheetApi {
             return NetworkClient.createService(SheetApi::class.java)
         }
+
+        @Provides
+        @Singleton
+        fun provideEvaluationApi(): EvaluationApi {
+            return NetworkClient.createService(EvaluationApi::class.java)
+        }
     }
     
     /**
@@ -81,4 +90,10 @@ abstract class AppModule {
     abstract fun bindSheetRepository(
         sheetRepositoryImpl: SheetRepositoryImpl
     ): SheetRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindEvaluationRepository(
+        evaluationRepositoryImpl: EvaluationRepositoryImpl
+    ): EvaluationRepository
 }
