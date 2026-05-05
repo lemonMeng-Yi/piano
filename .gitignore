@@ -8,3 +8,6 @@
 local.properties
 .idea
 .vscode
+
+# 包含本地配置的敏感文件，不纳入版本控制
+app/src/main/java/com/example/piano/core/network/config/NetworkConfig.kt
