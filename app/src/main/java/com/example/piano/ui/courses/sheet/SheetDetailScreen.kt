@@ -518,12 +518,14 @@ fun SheetDetailScreen(
                 val records = remember(notes) { mutableStateListOf<com.example.piano.domain.practice.CorrectionRecord>() }
                 var wrongMidi by remember { mutableStateOf<Int?>(null) }
                 var correctMidi by remember { mutableStateOf<Int?>(null) }
+                var playedMidi by remember { mutableStateOf<Int?>(null) }
                 var finished by remember { mutableStateOf(false) }
                 var showResultDialog by remember { mutableStateOf(false) }
                 var hasAdvancedForCurrentIndex by remember { mutableStateOf(false) }
                 var lastRecordedWrongMidi by remember { mutableStateOf<Int?>(null) }
                 var lastPitchThatAdvanced by remember { mutableStateOf<Int?>(null) }
                 var hasStartedCapture by remember { mutableStateOf(false) }
+                var previousPitchMidi by remember { mutableStateOf<Int?>(null) }
 
                 LaunchedEffect(showSoundPractice) {
                     if (showSoundPractice && !hasStartedCapture) {
@@ -539,10 +541,38 @@ fun SheetDetailScreen(
                 LaunchedEffect(soundPracticeCurrentPitch, currentIndex, finished) {
                     if (finished) return@LaunchedEffect
                     val pitch = soundPracticeCurrentPitch as? PitchResult.Pitch
-                    if (pitch == null) {
+                    val currentMidi = pitch?.note?.midi
+
+                    if (currentMidi == null) {
                         lastPitchThatAdvanced = null
+                        previousPitchMidi = null
                         return@LaunchedEffect
                     }
+
+                    val isNewPitch = currentMidi != previousPitchMidi
+                    previousPitchMidi = currentMidi
+
+                    if (isEvaluationMode) {
+                        if (!isNewPitch) return@LaunchedEffect
+                        val expected = notes.getOrNull(currentIndex) ?: return@LaunchedEffect
+                        val correct = pitch.note.midi == expected.midi
+                        records.add(
+                            com.example.piano.domain.practice.CorrectionRecord(
+                                index = currentIndex,
+                                expected = expected,
+                                actual = pitch.note,
+                                isCorrect = correct
+                            )
+                        )
+                        playedMidi = pitch.note.midi
+                        currentIndex++
+                        if (currentIndex >= notes.size) {
+                            finished = true
+                            viewModel.submitEvaluation(records.toList(), notes.size)
+                        }
+                        return@LaunchedEffect
+                    }
+
                     if (pitch.note.midi != lastPitchThatAdvanced) lastPitchThatAdvanced = null
                     val expected = notes.getOrNull(currentIndex) ?: return@LaunchedEffect
                     if (pitch.note.midi == expected.midi) {
@@ -597,6 +627,12 @@ fun SheetDetailScreen(
                         correctMidi = null
                     }
                 }
+                LaunchedEffect(playedMidi) {
+                    if (playedMidi != null) {
+                        delay(400)
+                        playedMidi = null
+                    }
+                }
 
                 DisposableEffect(Unit) {
                     onDispose { viewModel.stopPitchCapture() }
@@ -620,6 +656,8 @@ fun SheetDetailScreen(
                             records.clear()
                             wrongMidi = null
                             correctMidi = null
+                            playedMidi = null
+                            previousPitchMidi = null
                             finished = false
                         }) {
                             Icon(
@@ -662,9 +700,10 @@ fun SheetDetailScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(keyboardHeightDp),
-                        highlightMidi = notes.getOrNull(currentIndex)?.midi,
-                        wrongMidi = wrongMidi,
-                        correctMidi = correctMidi,
+                        highlightMidi = if (isEvaluationMode) null else notes.getOrNull(currentIndex)?.midi,
+                        wrongMidi = if (isEvaluationMode) null else wrongMidi,
+                        correctMidi = if (isEvaluationMode) null else correctMidi,
+                        playedMidi = playedMidi,
                         showOctaveLabels = true,
                         onKeyPress = { }
                     )
@@ -767,11 +806,13 @@ fun SheetDetailScreen(
                 val btRecords = remember(btNotes) { mutableStateListOf<com.example.piano.domain.practice.CorrectionRecord>() }
                 var btWrongMidi by remember { mutableStateOf<Int?>(null) }
                 var btCorrectMidi by remember { mutableStateOf<Int?>(null) }
+                var btPlayedMidi by remember { mutableStateOf<Int?>(null) }
                 var btFinished by remember { mutableStateOf(false) }
                 var btShowResultDialog by remember { mutableStateOf(false) }
                 var btHasAdvanced by remember { mutableStateOf(false) }
                 var btLastRecordedWrong by remember { mutableStateOf<Int?>(null) }
                 var btLastPitchThatAdvanced by remember { mutableStateOf<Int?>(null) }
+                var btPreviousPitchMidi by remember { mutableStateOf<Int?>(null) }
 
                 DisposableEffect(Unit) {
                     onDispose { viewModel.dismissBluetoothPracticeKeyboard() }
@@ -784,10 +825,38 @@ fun SheetDetailScreen(
                     LaunchedEffect(bluetoothPracticeCurrentPitch, btCurrentIndex, btFinished) {
                         if (btFinished) return@LaunchedEffect
                         val pitch = bluetoothPracticeCurrentPitch as? PitchResult.Pitch
-                        if (pitch == null) {
+                        val currentMidi = pitch?.note?.midi
+
+                        if (currentMidi == null) {
                             btLastPitchThatAdvanced = null
+                            btPreviousPitchMidi = null
                             return@LaunchedEffect
                         }
+
+                        val isNewPitch = currentMidi != btPreviousPitchMidi
+                        btPreviousPitchMidi = currentMidi
+
+                        if (isEvaluationMode) {
+                            if (!isNewPitch) return@LaunchedEffect
+                            val expected = btNotes.getOrNull(btCurrentIndex) ?: return@LaunchedEffect
+                            val correct = pitch.note.midi == expected.midi
+                            btRecords.add(
+                                com.example.piano.domain.practice.CorrectionRecord(
+                                    index = btCurrentIndex,
+                                    expected = expected,
+                                    actual = pitch.note,
+                                    isCorrect = correct
+                                )
+                            )
+                            btPlayedMidi = pitch.note.midi
+                            btCurrentIndex++
+                            if (btCurrentIndex >= (btNotes?.size ?: 0)) {
+                                btFinished = true
+                                viewModel.submitEvaluation(btRecords.toList(), btNotes?.size ?: 0)
+                            }
+                            return@LaunchedEffect
+                        }
+
                         if (pitch.note.midi != btLastPitchThatAdvanced) btLastPitchThatAdvanced = null
                         val expected = btNotes.getOrNull(btCurrentIndex) ?: return@LaunchedEffect
                         if (pitch.note.midi == expected.midi) {
@@ -841,6 +910,12 @@ fun SheetDetailScreen(
                             btCorrectMidi = null
                         }
                     }
+                    LaunchedEffect(btPlayedMidi) {
+                        if (btPlayedMidi != null) {
+                            delay(400)
+                            btPlayedMidi = null
+                        }
+                    }
                 }
 
                 val keyboardHeightDp = rememberPianoKeyboardBottomHeight()
@@ -861,6 +936,8 @@ fun SheetDetailScreen(
                             btRecords.clear()
                             btWrongMidi = null
                             btCorrectMidi = null
+                            btPlayedMidi = null
+                            btPreviousPitchMidi = null
                             btFinished = false
                         }) {
                             Icon(
@@ -964,9 +1041,10 @@ fun SheetDetailScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(keyboardHeightDp),
-                        highlightMidi = btNotes?.getOrNull(btCurrentIndex)?.midi,
-                        wrongMidi = btWrongMidi,
-                        correctMidi = btCorrectMidi,
+                        highlightMidi = if (isEvaluationMode) null else btNotes?.getOrNull(btCurrentIndex)?.midi,
+                        wrongMidi = if (isEvaluationMode) null else btWrongMidi,
+                        correctMidi = if (isEvaluationMode) null else btCorrectMidi,
+                        playedMidi = btPlayedMidi,
                         showOctaveLabels = true,
                         onKeyPress = { }
                     )
@@ -1070,6 +1148,7 @@ fun SheetDetailScreen(
                 val records = remember(notes) { mutableStateListOf<com.example.piano.domain.practice.CorrectionRecord>() }
                 var wrongMidi by remember { mutableStateOf<Int?>(null) }
                 var correctMidi by remember { mutableStateOf<Int?>(null) }
+                var playedMidi by remember { mutableStateOf<Int?>(null) }
                 var finished by remember { mutableStateOf(false) }
                 var showPracticeResultDialog by remember { mutableStateOf(false) }
 
@@ -1085,20 +1164,25 @@ fun SheetDetailScreen(
                             isCorrect = correct
                         )
                     )
-                    if (correct) {
-                        wrongMidi = null
-                        correctMidi = note.midi
+                    if (isEvaluationMode) {
+                        playedMidi = note.midi
                         currentIndex++
                         if (currentIndex >= notes.size) {
                             finished = true
-                            if (isEvaluationMode) {
-                                viewModel.submitEvaluation(records.toList(), notes.size)
-                            } else {
-                                showPracticeResultDialog = true
-                            }
+                            viewModel.submitEvaluation(records.toList(), notes.size)
                         }
                     } else {
-                        wrongMidi = note.midi
+                        if (correct) {
+                            wrongMidi = null
+                            correctMidi = note.midi
+                            currentIndex++
+                            if (currentIndex >= notes.size) {
+                                finished = true
+                                showPracticeResultDialog = true
+                            }
+                        } else {
+                            wrongMidi = note.midi
+                        }
                     }
                 }
 
@@ -1112,6 +1196,12 @@ fun SheetDetailScreen(
                     if (correctMidi != null) {
                         delay(350)
                         correctMidi = null
+                    }
+                }
+                LaunchedEffect(playedMidi) {
+                    if (playedMidi != null) {
+                        delay(400)
+                        playedMidi = null
                     }
                 }
 
@@ -1133,6 +1223,7 @@ fun SheetDetailScreen(
                             records.clear()
                             wrongMidi = null
                             correctMidi = null
+                            playedMidi = null
                             finished = false
                         }) {
                             Icon(
@@ -1175,9 +1266,10 @@ fun SheetDetailScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(keyboardHeightDp),
-                        highlightMidi = notes.getOrNull(currentIndex)?.midi,
-                        wrongMidi = wrongMidi,
-                        correctMidi = correctMidi,
+                        highlightMidi = if (isEvaluationMode) null else notes.getOrNull(currentIndex)?.midi,
+                        wrongMidi = if (isEvaluationMode) null else wrongMidi,
+                        correctMidi = if (isEvaluationMode) null else correctMidi,
+                        playedMidi = playedMidi,
                         showOctaveLabels = true,
                         playKeySound = { keySound.playNote(it) },
                         onKeyPress = ::onPracticeKeyPress
