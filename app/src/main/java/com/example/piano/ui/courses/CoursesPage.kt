@@ -10,8 +10,8 @@ import com.example.piano.ui.courses.learn.LearnPianoContent
  */
 @Composable
 fun CoursesPage(
-    onPlayVideo: (String) -> Unit = {},
-    onOpenCourseDetail: (String) -> Unit = {},
+    onPlayVideo: (Int, String) -> Unit = { _, _ -> },
+    onOpenCourseDetail: (Int) -> Unit = {},
     viewModel: CoursesViewModel = hiltViewModel()
 ) {
     LearnPianoContent(

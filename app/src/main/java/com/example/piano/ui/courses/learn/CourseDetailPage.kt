@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -26,9 +28,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,7 +38,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.piano.ui.components.BackTitleTopBar
 import com.example.piano.ui.theme.PianoTheme
@@ -45,18 +46,21 @@ import com.example.piano.ui.theme.PianoTheme
 private fun LessonCard(
     index: Int,
     title: String,
+    isCompleted: Boolean = false,
+    isLocked: Boolean = false,
     onClick: () -> Unit
 ) {
+    val alpha = if (isLocked) 0.4f else 1f
     Card(
-        onClick = onClick,
+        onClick = if (isLocked) ({}) else onClick,
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = PianoTheme.colors.surfaceVariant
+            containerColor = PianoTheme.colors.surfaceVariant.copy(alpha = alpha)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isLocked) 0.dp else 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -69,14 +73,19 @@ private fun LessonCard(
                     .width(4.dp)
                     .height(40.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(PianoTheme.colors.primary.copy(alpha = 0.8f))
+                    .background(
+                        if (isCompleted) Color(0xFF4CAF50) else PianoTheme.colors.primary.copy(alpha = 0.8f * alpha)
+                    )
             )
             Spacer(modifier = Modifier.width(16.dp))
             Box(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(PianoTheme.colors.onSurface.copy(alpha = 0.08f)),
+                    .background(
+                        if (isCompleted) Color(0xFF4CAF50).copy(alpha = 0.15f)
+                        else PianoTheme.colors.onSurface.copy(alpha = 0.08f)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -91,7 +100,7 @@ private fun LessonCard(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
-                color = PianoTheme.colors.onSurface,
+                color = PianoTheme.colors.onSurface.copy(alpha = alpha),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
@@ -101,15 +110,35 @@ private fun LessonCard(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(CircleShape)
-                    .background(PianoTheme.colors.primary),
+                    .background(
+                        if (isCompleted) Color(0xFF4CAF50)
+                        else if (isLocked) PianoTheme.colors.onSurface.copy(alpha = 0.12f)
+                        else PianoTheme.colors.primary
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    tint = PianoTheme.colors.onPrimary,
-                    modifier = Modifier.size(24.dp)
-                )
+                if (isCompleted) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = "已完成",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else if (isLocked) {
+                    Icon(
+                        Icons.Default.Lock,
+                        contentDescription = "已锁定",
+                        tint = PianoTheme.colors.onSurface.copy(alpha = 0.4f),
+                        modifier = Modifier.size(22.dp)
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = PianoTheme.colors.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
@@ -117,15 +146,18 @@ private fun LessonCard(
 
 /**
  * 课程详情页：展示该课程下的子课时卡片，点击卡片播放视频
- * 数据来自 GET /course/categories，按 categoryId 取对应大模块下的小模块列表
  */
 @Composable
 fun CourseDetailPage(
     onBack: () -> Unit,
-    onPlayVideo: (String) -> Unit,
+    onPlayVideo: (courseId: Int, videoUrl: String) -> Unit,
     viewModel: CourseDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadDetail()
+    }
 
     LaunchedEffect(uiState) {
         if (uiState is CourseDetailUiState.Error) {
@@ -187,7 +219,11 @@ fun CourseDetailPage(
                         LessonCard(
                             index = index + 1,
                             title = lesson.title,
-                            onClick = { onPlayVideo(lesson.videoUrl) }
+                            isCompleted = lesson.isCompleted,
+                            isLocked = lesson.isLocked,
+                            onClick = {
+                                onPlayVideo(lesson.courseId, lesson.videoUrl)
+                            }
                         )
                     }
                 }

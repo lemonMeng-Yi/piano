@@ -26,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -47,10 +48,14 @@ private val CARD_COLORS = listOf(
 @Composable
 fun LearnPianoContent(
     viewModel: CoursesViewModel,
-    onPlayVideo: (String) -> Unit,
-    onOpenCourseDetail: (String) -> Unit
+    onPlayVideo: (Int, String) -> Unit,
+    onOpenCourseDetail: (Int) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadCategories()
+    }
 
     when (val state = uiState) {
         is CoursesUiState.Loading -> {
@@ -100,13 +105,12 @@ fun LearnPianoContent(
                         bullets = category.bullets,
                         statusText = category.statusText,
                         inProgress = category.inProgress,
+                        isLocked = category.isLocked,
                         cardColor = cardColor,
                         accentColor = accentColor,
                         contentColor = contentColor,
-                        videoUrl = null,
-                        courseId = if (category.hasSubCourses) category.categoryId.toString() else null,
+                        categoryId = if (category.hasSubCourses) category.categoryId else null,
                         onOpenDetail = onOpenCourseDetail,
-                        onPlayVideo = onPlayVideo,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                 }
@@ -122,13 +126,12 @@ private fun CourseCard(
     bullets: List<String>,
     statusText: String,
     inProgress: Boolean,
+    isLocked: Boolean = false,
     cardColor: Color,
     accentColor: Color,
     contentColor: Color,
-    videoUrl: String? = null,
-    courseId: String? = null,
-    onOpenDetail: (String) -> Unit = {},
-    onPlayVideo: (String) -> Unit = {},
+    categoryId: Int? = null,
+    onOpenDetail: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -162,14 +165,7 @@ private fun CourseCard(
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    if (inProgress) {
-                        Text(
-                            text = statusText,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = accentColor,
-                            fontWeight = FontWeight.Medium
-                        )
-                    } else {
+                    if (isLocked) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.Lock,
@@ -184,28 +180,46 @@ private fun CourseCard(
                                 color = accentColor
                             )
                         }
+                    } else if (inProgress) {
+                        Text(
+                            text = statusText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = accentColor,
+                            fontWeight = FontWeight.Medium
+                        )
+                    } else {
+                        Text(
+                            text = statusText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = contentColor.copy(alpha = 0.7f)
+                        )
                     }
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
             Button(
                 onClick = {
-                    if (courseId != null) {
-                        onOpenDetail(courseId)
-                    } else {
-                        videoUrl?.let { url -> onPlayVideo(url) }
+                    if (!isLocked && categoryId != null) {
+                        onOpenDetail(categoryId)
                     }
                 },
+                enabled = !isLocked,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = contentColor.copy(alpha = 0.25f),
-                    contentColor = contentColor
+                    contentColor = contentColor,
+                    disabledContainerColor = contentColor.copy(alpha = 0.12f),
+                    disabledContentColor = contentColor.copy(alpha = 0.4f)
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                if (isLocked) {
+                    Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(18.dp))
+                } else {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("开始学习")
+                Text(if (isLocked) "已锁定" else "开始学习")
             }
         }
     }

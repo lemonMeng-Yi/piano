@@ -2,6 +2,7 @@ package com.example.piano.ui.courses.learn
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.piano.core.manager.TokenManager
 import com.example.piano.core.network.util.ResponseState
 import com.example.piano.data.course.api.dto.CategoryWithCoursesDTO
 import com.example.piano.data.course.api.dto.CourseItemDTO
@@ -21,14 +22,16 @@ data class CategoryUi(
     val title: String,
     /** 子课时标题列表，用于卡片上展示为 • 条目 */
     val bullets: List<String>,
-    /** 状态文案，如「进行中 0/3」「未开始」 */
+    /** 状态文案，如「进行中 1/3」「未开始」「未解锁」「已完成」 */
     val statusText: String,
-    /** 是否有进行中的子课时（有子课时时为 true） */
+    /** 是否有进行中的子课时 */
     val inProgress: Boolean,
-    /** 是否有子课时；为 true 时点击「开始学习」进入详情页，否则不进入 */
+    /** 是否有子课时；为 true 时点击「开始学习」进入详情页 */
     val hasSubCourses: Boolean,
-    /** 该大模块下的子课时列表（courseId + title），详情页展示并点击播放视频 */
-    val courses: List<CourseItemDTO>
+    /** 该大模块下的子课时列表 */
+    val courses: List<CourseItemDTO>,
+    /** 是否已锁定 */
+    val isLocked: Boolean = false
 )
 
 /** 课程列表状态 */
@@ -54,10 +57,6 @@ class CoursesViewModel @Inject constructor(
         _selectedTabIndex.value = index.coerceIn(0, 1)
     }
 
-    init {
-        loadCategories()
-    }
-
     fun loadCategories() {
         viewModelScope.launch {
             _uiState.value = CoursesUiState.Loading
@@ -77,15 +76,50 @@ class CoursesViewModel @Inject constructor(
     private fun CategoryWithCoursesDTO.toCategoryUi(): CategoryUi {
         val hasSub = courses.isNotEmpty()
         val bullets = courses.map { it.title }
-        val statusText = if (hasSub) "进行中 0/${courses.size}" else "未开始"
+        val loggedIn = TokenManager.isLoggedIn()
+        val locked = isLocked ?: false
+        val comp = completedCount
+        val total = totalCount
+
+        val statusText: String
+        val inProgress: Boolean
+
+        when {
+            !loggedIn -> {
+                statusText = if (hasSub) "${total}课时" else "未开始"
+                inProgress = false
+            }
+            locked -> {
+                statusText = "未解锁"
+                inProgress = false
+            }
+            comp == 0 && hasSub -> {
+                statusText = "未开始"
+                inProgress = false
+            }
+            comp in 1 until total -> {
+                statusText = "进行中 $comp/$total"
+                inProgress = true
+            }
+            comp >= total && total > 0 -> {
+                statusText = "已完成"
+                inProgress = true
+            }
+            else -> {
+                statusText = "未开始"
+                inProgress = false
+            }
+        }
+
         return CategoryUi(
             categoryId = categoryId,
             title = categoryName,
             bullets = bullets,
             statusText = statusText,
-            inProgress = hasSub,
+            inProgress = inProgress,
             hasSubCourses = hasSub,
-            courses = courses
+            courses = courses,
+            isLocked = locked
         )
     }
 }

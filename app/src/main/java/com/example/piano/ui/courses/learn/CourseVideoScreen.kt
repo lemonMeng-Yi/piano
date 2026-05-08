@@ -4,32 +4,32 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import com.example.piano.core.network.util.ResponseState
 
-/**
- * 课程视频全屏播放页
- * 横竖屏翻转时会保留播放进度与播放/暂停状态，从原位置继续播放。
- *
- * @param viewModel 由导航处通过 hiltViewModel(backStackEntry) 注入，用于保存/恢复进度
- * @param onBack 返回回调
- */
 @Composable
 fun CourseVideoScreen(
     viewModel: CourseVideoViewModel,
@@ -61,6 +61,33 @@ fun CourseVideoScreen(
         }
     }
 
+    val detail by viewModel.courseDetail.collectAsState()
+    val completeResult by viewModel.completeResult.collectAsState()
+    var showCompletedHint by remember { mutableStateOf(false) }
+
+    LaunchedEffect(completeResult) {
+        if (completeResult is ResponseState.Success) {
+            showCompletedHint = true
+            kotlinx.coroutines.delay(2000)
+            showCompletedHint = false
+        }
+    }
+
+    // 视频播放结束时：未完成则自动标记完成，已完成则什么都不做
+    DisposableEffect(exoPlayer) {
+        val listener = object : Player.Listener {
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_ENDED) {
+                    if (viewModel.courseDetail.value?.isCompleted != 1) {
+                        viewModel.markComplete()
+                    }
+                }
+            }
+        }
+        exoPlayer.addListener(listener)
+        onDispose { exoPlayer.removeListener(listener) }
+    }
+
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         AndroidView(
             factory = { ctx ->
@@ -80,6 +107,16 @@ fun CourseVideoScreen(
                 Icons.Default.ArrowBack,
                 contentDescription = "返回",
                 tint = Color.White
+            )
+        }
+
+        if (showCompletedHint) {
+            Text(
+                text = "已完成",
+                color = Color(0xFF4CAF50),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 16.dp)
             )
         }
     }

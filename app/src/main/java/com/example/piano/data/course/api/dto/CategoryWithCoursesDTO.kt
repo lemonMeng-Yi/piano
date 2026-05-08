@@ -14,5 +14,14 @@ data class CategoryWithCoursesDTO(
     val categoryName: String,
 
     @SerializedName("courses")
-    val courses: List<CourseItemDTO> = emptyList()
+    val courses: List<CourseItemDTO> = emptyList(),
+
+    @SerializedName("isLocked")
+    val isLocked: Boolean? = null,
+
+    @SerializedName("completedCount")
+    val completedCount: Int = 0,
+
+    @SerializedName("totalCount")
+    val totalCount: Int = 0
 )

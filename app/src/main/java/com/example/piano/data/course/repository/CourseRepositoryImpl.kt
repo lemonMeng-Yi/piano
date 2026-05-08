@@ -2,8 +2,10 @@ package com.example.piano.data.course.repository
 
 import com.example.piano.core.network.util.ResponseState
 import com.example.piano.core.network.util.toState
+import com.example.piano.core.network.util.toStateUnit
 import com.example.piano.data.course.api.CourseApi
 import com.example.piano.data.course.api.dto.CategoryWithCoursesDTO
+import com.example.piano.data.course.api.dto.CourseDetailDTO
 import com.example.piano.domain.course.repository.CourseRepository
 import javax.inject.Inject
 
@@ -17,6 +19,22 @@ class CourseRepositoryImpl @Inject constructor(
     override suspend fun getCategories(): ResponseState<List<CategoryWithCoursesDTO>> {
         return try {
             courseApi.listCategoriesWithCourses().toState()
+        } catch (e: Exception) {
+            ResponseState.UnknownError(e)
+        }
+    }
+
+    override suspend fun getCourseById(courseId: Int): ResponseState<CourseDetailDTO> {
+        return try {
+            courseApi.getCourseById(courseId).toState()
+        } catch (e: Exception) {
+            ResponseState.UnknownError(e)
+        }
+    }
+
+    override suspend fun markCourseComplete(courseId: Int): ResponseState<Unit> {
+        return try {
+            courseApi.markComplete(courseId).toStateUnit()
         } catch (e: Exception) {
             ResponseState.UnknownError(e)
         }

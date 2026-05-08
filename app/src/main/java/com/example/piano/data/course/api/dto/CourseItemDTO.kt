@@ -14,5 +14,11 @@ data class CourseItemDTO(
     val title: String,
 
     @SerializedName("videoUrl")
-    val videoUrl: String? = null
+    val videoUrl: String? = null,
+
+    @SerializedName("description")
+    val description: String? = null,
+
+    @SerializedName("isCompleted")
+    val isCompleted: Int? = null
 )

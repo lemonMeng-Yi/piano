@@ -151,22 +151,25 @@ fun MainNavHost(
                 }
                 composable(NavRoutes.COURSES) {
                     CoursesPage(
-                        onPlayVideo = { navigationActions.navigateToCourseVideo(it) },
-                        onOpenCourseDetail = { navigationActions.navigateToCourseDetail(it) }
+                        onPlayVideo = { courseId, videoUrl -> navigationActions.navigateToCourseVideo(courseId, videoUrl) },
+                        onOpenCourseDetail = { categoryId -> navigationActions.navigateToCourseDetail(categoryId) }
                     )
                 }
                 composable(
                     route = "${NavRoutes.COURSE_DETAIL}/{courseId}",
-                    arguments = listOf(navArgument("courseId") { type = NavType.StringType })
+                    arguments = listOf(navArgument("courseId") { type = NavType.IntType })
                 ) { backStackEntry ->
                     CourseDetailPage(
                         onBack = { navController.popBackStack() },
-                        onPlayVideo = { navigationActions.navigateToCourseVideo(it) }
+                        onPlayVideo = { courseId, videoUrl -> navigationActions.navigateToCourseVideo(courseId, videoUrl) }
                     )
                 }
                 composable(
-                    route = "${NavRoutes.COURSE_VIDEO}/{videoUrl}",
-                    arguments = listOf(navArgument("videoUrl") { type = NavType.StringType })
+                    route = "${NavRoutes.COURSE_VIDEO}/{courseId}/{videoUrl}",
+                    arguments = listOf(
+                        navArgument("courseId") { type = NavType.IntType },
+                        navArgument("videoUrl") { type = NavType.StringType }
+                    )
                 ) { backStackEntry ->
                     val viewModel: CourseVideoViewModel = hiltViewModel(backStackEntry)
                     CourseVideoScreen(viewModel = viewModel, onBack = { navController.popBackStack() })

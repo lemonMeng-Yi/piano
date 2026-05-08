@@ -105,16 +105,16 @@ class NavigationActions(private val navController: NavController) {
     /**
      * 导航到课程视频全屏播放页
      */
-    fun navigateToCourseVideo(videoUrl: String) {
+    fun navigateToCourseVideo(courseId: Int, videoUrl: String) {
         val encoded = android.net.Uri.encode(videoUrl)
-        navController.navigate("${NavRoutes.COURSE_VIDEO}/$encoded")
+        navController.navigate("${NavRoutes.COURSE_VIDEO}/$courseId/$encoded")
     }
 
     /**
      * 导航到课程详情页（子课时列表）
      */
-    fun navigateToCourseDetail(courseId: String) {
-        navController.navigate("${NavRoutes.COURSE_DETAIL}/$courseId")
+    fun navigateToCourseDetail(categoryId: Int) {
+        navController.navigate("${NavRoutes.COURSE_DETAIL}/$categoryId")
     }
 
     /**
