@@ -80,7 +80,9 @@ class SheetViewModel @Inject constructor(
 
     fun loadList() {
         viewModelScope.launch {
-            _listState.value = SheetListUiState.Loading
+            if (_listState.value !is SheetListUiState.Success) {
+                _listState.value = SheetListUiState.Loading
+            }
             when (val result = sheetRepository.list()) {
                 is ResponseState.Success -> _listState.value = SheetListUiState.Success(result.body)
                 is ResponseState.NetworkError -> _listState.value = SheetListUiState.Error(result.msg)
@@ -93,7 +95,9 @@ class SheetViewModel @Inject constructor(
 
     fun loadFavorites() {
         viewModelScope.launch {
-            _favoritesState.value = SheetFavoritesUiState.Loading
+            if (_favoritesState.value !is SheetFavoritesUiState.Success) {
+                _favoritesState.value = SheetFavoritesUiState.Loading
+            }
             when (val result = sheetRepository.listFavorites()) {
                 is ResponseState.Success -> _favoritesState.value = SheetFavoritesUiState.Success(result.body)
                 is ResponseState.NetworkError -> {

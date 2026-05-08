@@ -75,14 +75,17 @@ fun PianoTutorApp() {
     val navController = rememberNavController()
     // 从 TokenManager 读取已保存的 token 来判断初始登录状态
     var isLoggedIn by remember { mutableStateOf(TokenManager.isLoggedIn()) }
-    
-    if (!isLoggedIn) {
+    var isGuestMode by remember { mutableStateOf(false) }
+
+    if (!isLoggedIn && !isGuestMode) {
         // 认证导航：管理登录和注册页面
         AuthNavHost(
             navController = navController,
             onLoginSuccess = {
-                // 登录成功，更新登录状态
                 isLoggedIn = true
+            },
+            onGuestMode = {
+                isGuestMode = true
             }
         )
     } else {
@@ -92,6 +95,7 @@ fun PianoTutorApp() {
             onLogout = {
                 // 退出登录，直接更新状态，界面会自动切换
                 isLoggedIn = false
+                isGuestMode = false
             }
         )
     }

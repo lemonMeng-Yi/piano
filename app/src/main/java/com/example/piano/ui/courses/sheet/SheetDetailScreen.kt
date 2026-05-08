@@ -79,9 +79,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.piano.ui.components.BackTitleTopBar
 import com.example.piano.ui.components.NetworkErrorView
+import com.example.piano.ui.components.LoginPromptDialog
 import com.example.piano.ui.theme.PianoTheme
 import com.example.piano.core.audio.PianoKeySound
 import com.example.piano.core.audio.PitchResult
+import com.example.piano.core.manager.TokenManager
 import com.example.piano.domain.practice.Note
 import com.example.piano.ui.practice.Full88PianoKeyboard
 import com.example.piano.ui.practice.rememberPianoKeyboardBottomHeight
@@ -187,6 +189,7 @@ private fun NotationSwitchIcon(
 fun SheetDetailScreen(
     onBack: () -> Unit,
     onNavigateToVirtualPractice: (sheetId: Long) -> Unit = {},
+    onNavigateToLogin: () -> Unit = {},
     viewModel: SheetDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -283,6 +286,7 @@ fun SheetDetailScreen(
 
     var showPracticeMethodDialog by remember { mutableStateOf(false) }
     var showModeSelectionDialog by remember { mutableStateOf(false) }
+    var showLoginDialog by remember { mutableStateOf(false) }
     var pendingPracticeMethod by remember { mutableStateOf<PracticeMethod?>(null) }
 
     /** 声音识别：先弹权限弹窗，同意后再显示键盘 */
@@ -331,14 +335,20 @@ fun SheetDetailScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                IconButton(onClick = { showPracticeMethodDialog = true }) {
+                                IconButton(onClick = {
+                                    if (TokenManager.isLoggedIn()) showPracticeMethodDialog = true
+                                    else showLoginDialog = true
+                                }) {
                                     Text(
                                         text = "练琴",
                                         style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp),
                                         color = PianoTheme.colors.primary
                                     )
                                 }
-                                IconButton(onClick = { viewModel.toggleFavorite() }) {
+                                IconButton(onClick = {
+                                    if (TokenManager.isLoggedIn()) viewModel.toggleFavorite()
+                                    else showLoginDialog = true
+                                }) {
                                     Icon(
                                         imageVector = if (favorited) Icons.Filled.Star else Icons.Outlined.Star,
                                         contentDescription = if (favorited) "取消收藏" else "收藏",
@@ -1434,6 +1444,16 @@ fun SheetDetailScreen(
                     else -> {}
                 }
                 pendingPracticeMethod = null
+            }
+        )
+    }
+
+    if (showLoginDialog) {
+        LoginPromptDialog(
+            onDismiss = { showLoginDialog = false },
+            onNavigateToLogin = {
+                showLoginDialog = false
+                onNavigateToLogin()
             }
         )
     }

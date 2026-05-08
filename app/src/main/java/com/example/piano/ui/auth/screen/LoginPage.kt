@@ -26,7 +26,8 @@ import com.example.piano.ui.theme.PianoTheme
 @Composable
 fun LoginPage(
     navigationActions: NavigationActions,
-    onLoginClick: (String, String) -> Unit = { _, _ -> }
+    onLoginClick: (String, String) -> Unit = { _, _ -> },
+    onGuestMode: () -> Unit = {}
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -193,6 +194,18 @@ fun LoginPage(
             }
             
             Spacer(modifier = Modifier.weight(1f))
+
+            // 游客模式入口
+            TextButton(
+                onClick = onGuestMode,
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                Text(
+                    text = "以游客模式进入",
+                    fontSize = 14.sp,
+                    color = PianoTheme.colors.textSecondary
+                )
+            }
         }
     }
 }

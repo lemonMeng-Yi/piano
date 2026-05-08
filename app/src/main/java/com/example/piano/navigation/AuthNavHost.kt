@@ -33,7 +33,8 @@ import com.example.piano.ui.components.SnackBarManager
 @Composable
 fun AuthNavHost(
     navController: NavHostController,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    onGuestMode: () -> Unit = {}
 ) {
     val navigationActions = NavigationActions(navController)
     
@@ -57,7 +58,8 @@ fun AuthNavHost(
                             )
                         }
                     }
-                }
+                },
+                onGuestMode = onGuestMode
             )
         }
         

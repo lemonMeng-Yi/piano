@@ -45,6 +45,8 @@ import com.example.piano.ui.profile.ProfileEditPage
 import com.example.piano.ui.practice.VirtualKeyboardPracticeScreen
 import com.example.piano.ui.profile.ProfilePage
 import com.example.piano.ui.profile.PermissionSettingsPage
+import com.example.piano.core.manager.TokenManager
+import com.example.piano.ui.components.LoginPromptDialog
 
 /**
  * 功能级导航 (MainNavHost)
@@ -78,6 +80,8 @@ fun MainNavHost(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    var showLoginDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         bottomBar = {
             if (currentRoute != NavRoutes.PRACTICE_FOLLOW_ALONG && currentRoute != NavRoutes.PITCH_DETECTION && !currentRoute.orEmpty().startsWith("${NavRoutes.COURSE_VIDEO}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.COURSE_DETAIL}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.SHEET_DETAIL}/") && !currentRoute.orEmpty().startsWith("${NavRoutes.SHEET_VIRTUAL_PRACTICE}/")) {
@@ -106,7 +110,10 @@ fun MainNavHost(
                     icon = { Icon(Icons.Default.Person, contentDescription = "我的") },
                     label = { Text("我的", style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp)) },
                     selected = currentRoute == NavRoutes.PROFILE,
-                    onClick = { navigationActions.navigateToProfile() }
+                    onClick = {
+                        if (TokenManager.isLoggedIn()) navigationActions.navigateToProfile()
+                        else showLoginDialog = true
+                    }
                 )
             }
             }
@@ -182,6 +189,7 @@ fun MainNavHost(
                         SheetDetailScreen(
                             onBack = { navController.popBackStack() },
                             onNavigateToVirtualPractice = { navigationActions.navigateToSheetVirtualPractice(it) },
+                            onNavigateToLogin = onLogout,
                             viewModel = hiltViewModel(backStackEntry)
                         )
                     }
@@ -212,5 +220,15 @@ fun MainNavHost(
                 }
             }
         }
+    }
+
+    if (showLoginDialog) {
+        LoginPromptDialog(
+            onDismiss = { showLoginDialog = false },
+            onNavigateToLogin = {
+                showLoginDialog = false
+                onLogout()
+            }
+        )
     }
 }

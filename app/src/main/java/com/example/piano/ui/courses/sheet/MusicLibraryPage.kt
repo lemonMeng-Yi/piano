@@ -1,5 +1,6 @@
 package com.example.piano.ui.courses.sheet
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -111,14 +112,15 @@ fun MusicLibraryContent(
 
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let { msg ->
-            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             viewModel.clearSnackbarMessage()
         }
     }
 
     LaunchedEffect(pagerState.currentPage) {
-        if (pagerState.currentPage == SheetMusicTab.FAVORITES.ordinal) {
-            viewModel.loadFavorites()
+        when (pagerState.currentPage) {
+            SheetMusicTab.SHEET_MUSIC.ordinal -> viewModel.loadList()
+            SheetMusicTab.FAVORITES.ordinal -> viewModel.loadFavorites()
         }
     }
 
@@ -200,10 +202,7 @@ private fun SheetMusicListContent(
 ) {
     when (listState) {
         is SheetListUiState.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = PianoTheme.colors.primary)
             }
         }
@@ -255,10 +254,7 @@ private fun FavoritesContent(
 ) {
     when (favoritesState) {
         is SheetFavoritesUiState.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = PianoTheme.colors.primary)
             }
         }
