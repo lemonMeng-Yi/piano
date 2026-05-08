@@ -57,9 +57,9 @@ class ThemeManager @Inject constructor(
 
     fun toggleTheme(currentTheme: AppTheme) {
         val newTheme = when (currentTheme) {
-            AppTheme.Light -> AppTheme.Dark
-            AppTheme.Dark -> AppTheme.Light
             AppTheme.System -> AppTheme.Light
+            AppTheme.Light -> AppTheme.Dark
+            AppTheme.Dark -> AppTheme.System
         }
         setTheme(newTheme)
     }

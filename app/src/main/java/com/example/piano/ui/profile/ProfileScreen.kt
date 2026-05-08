@@ -41,10 +41,6 @@ fun ProfilePage(
     // 从 CompositionLocal 获取 ThemeManager
     val themeManager = LocalThemeManager.current
     val currentTheme by themeManager.currentTheme.collectAsState()
-    val actualTheme = themeManager.getActualTheme()
-    
-    // 计算当前是否深色模式
-    val isDarkMode = actualTheme == AppTheme.Dark
 
     val profile by authViewModel.profile.collectAsState()
     val profileLoading by authViewModel.profileLoading.collectAsState()
@@ -118,14 +114,18 @@ fun ProfilePage(
                     showDivider = true
                 )
                 SettingsItem(
-                    icon = if (isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
-                    label = "深色模式",
-                    hasToggle = true,
-                    toggleValue = isDarkMode,
-                    onToggle = {
-                        // 切换主题
-                        themeManager.toggleTheme(currentTheme)
+                    icon = when (currentTheme) {
+                        AppTheme.System -> Icons.Default.BrightnessAuto
+                        AppTheme.Dark -> Icons.Default.DarkMode
+                        AppTheme.Light -> Icons.Default.LightMode
                     },
+                    label = "主题模式",
+                    trailingText = when (currentTheme) {
+                        AppTheme.System -> "跟随系统"
+                        AppTheme.Dark -> "深色模式"
+                        AppTheme.Light -> "浅色模式"
+                    },
+                    onClick = { themeManager.toggleTheme(currentTheme) },
                     showDivider = false
                 )
             }
@@ -228,6 +228,7 @@ fun SettingsItem(
     icon: ImageVector,
     label: String,
     badge: String? = null,
+    trailingText: String? = null,
     hasToggle: Boolean = false,
     toggleValue: Boolean = false,
     onToggle: (() -> Unit)? = null,
@@ -283,6 +284,14 @@ fun SettingsItem(
                         onCheckedChange = { onToggle?.invoke() }
                     )
                 } else {
+                    if (trailingText != null) {
+                        Text(
+                            text = trailingText,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                            color = PianoTheme.colors.textSecondary
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
                     Icon(
                         Icons.Default.ChevronRight,
                         contentDescription = null,
